@@ -1,26 +1,9 @@
 #!/usr/bin/env sh
 
-# abort on errors
-
-set -e
-
-# build
-
 npm run build
 
-# navigate into the build output directory
+git add -f dist && git commit -m 'adding dist subtree'
 
-cd dist
+git subtree push --prefix dist origin gh-pages
 
-# if you are deploying to a custom domain
-# echo 'www.example.com' > CNAME
-
-git init
-
-git add -A
-
-git commit -m 'deploy'
-
-git push -f git@github.com:FelixGaudin/route.git master:gh-pages
-
-cd -
+# source : https://learnvue.co/tutorials/deploy-vue-to-github-pages

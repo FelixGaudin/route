@@ -37,7 +37,9 @@
 </template>
 
 <script>
-// const { ipcRenderer } = require('electron')
+
+const {ipcRenderer} = window.require("electron")
+
 
 export default {
   name: 'Navbar',
@@ -64,7 +66,7 @@ export default {
         })
     },
     close() {
-        // ipcRenderer.send('close')
+        ipcRenderer.send('close')
     }
   }
 }

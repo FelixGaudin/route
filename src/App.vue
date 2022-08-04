@@ -11,19 +11,23 @@
 
 
 <script>
-import Navbar from '@/components/Navbar.vue'
+const {ipcRenderer} = window.require("electron")
 
+import Navbar from '@/components/Navbar.vue'
 
 export default {
   components: {
     Navbar,
   },
+  methods : {
+    test(){
+      ipcRenderer.send('test', 'coucou') // or any other ipcRenderer method you want to invoke
+    }
+  },
   mounted() {
+    this.test()
     // Bulles script
-
     var canvas = document.getElementById('beerCanvas');
-
-
     setInterval(()=>{
         canvas.style.height = "0px";
         canvas.style.height = document.documentElement.scrollHeight + "px";

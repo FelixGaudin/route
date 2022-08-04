@@ -15,8 +15,7 @@ function createWindow() {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModule: true,
-            nodeIntegrationInWorker: true,
+            contextIsolation: false,
         },
     })
 
@@ -49,6 +48,10 @@ app.on('activate', function () {
 
 ipcMain.on('close', () => {
     app.quit()
+})
+
+ipcMain.on('test', ()=> {
+    console.log("IT WORKS");
 })
 
 // Users

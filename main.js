@@ -70,6 +70,12 @@ ipcMain.on('getUsers', (event) => {
     })
 })
 
+ipcMain.on('getPseudos', (event) => {
+    db.users.getPseudos((err, pseudos) => {
+        event.reply('getPseudosReply', formatResponse(err, pseudos));
+    })
+})
+
 ipcMain.on('getUser', (event, user) => {
     db.users.getUser((err, user) => {
         event.reply('getUserReply', err, user)

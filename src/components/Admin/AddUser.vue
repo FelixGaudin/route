@@ -7,7 +7,9 @@
 
             <b-field label="Pseudo"
                 required
-                class="form-field">
+                class="form-field"
+                :type="isPseudoUnique()? '': 'is-danger'"
+                :message="isPseudoUnique()? '': 'Le pseudo est déjà utilisé'">
                 <b-input 
                     size="is-medium" 
                     v-model="formInputs.pseudo"
@@ -115,6 +117,7 @@ export default {
     name: 'AddUser',
     data() {
         return {
+            usedPseudos : [],
             formInputs : {
                 pseudo : '',
                 name : '',
@@ -143,6 +146,15 @@ export default {
         }
     },
     methods : {
+        isPseudoUnique() {
+            let v = this.usedPseudos.filter((option) => {
+                return option
+                    .toString()
+                    .toLowerCase()
+                    .localeCompare(this.formInputs.pseudo.toLowerCase()) == 0
+            }).length;
+            return v === 0;
+        },
         clearDate() {this.birthday = undefined},
         dateFormatter(date) {
             return new Intl.DateTimeFormat("fr").format(date)
@@ -169,12 +181,9 @@ export default {
                 sex       : this.formInputs['sex'],
                 birthday  : birthday_formated,
             }
-            console.log(resp);
             ipcRenderer.on('addUserReply', (event, resp) => {
                 if (resp.error) {
                     let errMsg;
-                    console.log("HERE");
-                    console.log(resp.error);
                     if (resp.errorMessage === 19) {
                         this.formInputs.pseudo = '';
                         errMsg = 'Le pseudo est déjà utilisé'
@@ -202,6 +211,25 @@ export default {
             ipcRenderer.send('addUser', resp);
         }
     },
+    beforeMount() {
+        ipcRenderer.on('getPseudosReply', (event, resp) => {
+            if (resp.error) {
+                this.$buefy.dialog.alert({
+                    title: 'ERREUR',
+                    message: 'Il y a eu une erreur récupérer les pseudos, merci de contacter un routier',
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                })
+            } else {
+                this.usedPseudos = resp.data;
+            }
+        })
+        ipcRenderer.send('getPseudos')
+    }
 }
 </script>
 

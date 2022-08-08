@@ -53,6 +53,16 @@ function getUsers(callback) {
     })
 }
 
+function getPseudos(callback) {
+    db.all("SELECT pseudo FROM Users", (err, rows) => {
+        if (err) console.log(err);
+        if (callback) callback(
+            err, 
+            rows.map((row) => row.pseudo)
+            );
+    })
+}
+
 function getUser(pseudo, callback) {
     db.get(`SELECT * FROM Users WHERE pseudo = "${pseudo}"`, (err, row) => {
         if (err) console.log(err);
@@ -69,7 +79,7 @@ function addUser(user, callback) {
         user.staff,user.sex,user.birthday],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
@@ -196,6 +206,7 @@ function buy(pseudo, beerId, number, callback) {
 
 module.exports.users = {
     getUsers   : getUsers,
+    getPseudos : getPseudos,
     addUser    : addUser,
     getUser    : getUser,
     updateUser : updateUser,

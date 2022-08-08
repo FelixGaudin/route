@@ -71,9 +71,12 @@
     </section>
 </template>
 <script>
+const {ipcRenderer} = window.require("electron")
+
 function randInt() {
     return Math.floor(Math.random() * 101);
 }
+
 export default {
     data() {
         const users = [
@@ -94,7 +97,7 @@ export default {
                 },
                 { 
                     title: 'Positif', 
-                    field: 'ronds',
+                    field: 'rond',
                     visible: true 
                 }
             ],
@@ -122,6 +125,25 @@ export default {
     },
     beforeMount() {
         this.brrr = this.$test
+        ipcRenderer.on('getUsersReply', (event, resp) => {
+            if (resp.error) {
+                this.$buefy.dialog.alert({
+                    title: 'ERREUR',
+                    message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                })
+            } else {
+                console.log(resp.data);
+                this.users = resp.data;
+                console.log(this.users);
+            }
+        })
+        ipcRenderer.send('getUsers')
     }
 }
 </script>

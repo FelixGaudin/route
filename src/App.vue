@@ -11,21 +11,13 @@
 
 
 <script>
-const {ipcRenderer} = window.require("electron")
-
 import Navbar from '@/components/Navbar.vue'
 
 export default {
   components: {
     Navbar,
   },
-  methods : {
-    test(){
-      ipcRenderer.send('test', 'coucou') // or any other ipcRenderer method you want to invoke
-    }
-  },
   mounted() {
-    this.test()
     // Bulles script
     var canvas = document.getElementById('beerCanvas');
     setInterval(()=>{
@@ -78,7 +70,8 @@ export default {
 
 <style>
 /* @import '../src/css/all.css'; */
-
+/* TODO:avoir les icons en offline */
+@import url('https://cdn.jsdelivr.net/npm/@mdi/font@5.8.55/css/materialdesignicons.min.css');
 @import url('https://use.fontawesome.com/releases/v5.2.0/css/all.css');
 @import '../src/css/bulles.css';
 body::-webkit-scrollbar {

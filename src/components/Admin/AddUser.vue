@@ -7,9 +7,7 @@
 
             <b-field label="Pseudo"
                 required
-                class="form-field"
-                :type="isPseudoUnique() ? '' : 'is-danger'"
-                :message="isPseudoUnique() ? '' : 'Ce pseudo est déjà utilisé'">
+                class="form-field">
                 <b-input 
                     size="is-medium" 
                     v-model="formInputs.pseudo"
@@ -96,6 +94,7 @@
                     :icon-right="formInputs.birthday != undefined ? 'close-circle' : ''"
                     icon-right-clickable
                     @icon-right-click="clearDate"
+                    :date-formatter="dateFormatter"
                     trap-focus>
                 </b-datepicker>
             </b-field>
@@ -109,6 +108,9 @@
 </template>
 
 <script>
+
+const {ipcRenderer} = window.require("electron")
+
 export default {
     name: 'AddUser',
     data() {
@@ -119,8 +121,8 @@ export default {
                 firstName : '',
                 totem : '',
                 quali : '',
-                staff : '',
                 sex : '',
+                staff : '',
                 birthday: undefined,
             },
             staffs : [
@@ -142,8 +144,8 @@ export default {
     },
     methods : {
         clearDate() {this.birthday = undefined},
-        isPseudoUnique() {
-            return true;
+        dateFormatter(date) {
+            return new Intl.DateTimeFormat("fr").format(date)
         },
         areInputsValid() {
             // Pseudo (must be unique)
@@ -153,6 +155,10 @@ export default {
             // Name, Firstname, Totem & quali BALEK
         },
         submit() {
+            let birthday = this.formInputs['birthday']
+            // set l'heure à midi pour éviter les soucis de timezone ?
+            let timezoneOffset = birthday.getTimezoneOffset()*60;
+            let birthday_formated = Math.floor((birthday / 1000)-timezoneOffset).toString()
             let resp = {
                 pseudo    : this.formInputs['pseudo'],
                 name      : this.formInputs['name'],
@@ -161,9 +167,39 @@ export default {
                 quali     : this.formInputs['quali'],
                 staff     : this.formInputs['staff'],
                 sex       : this.formInputs['sex'],
-                birthday  : this.formInputs['birthday'],
+                birthday  : birthday_formated,
             }
             console.log(resp);
+            ipcRenderer.on('addUserReply', (event, resp) => {
+                if (resp.error) {
+                    let errMsg;
+                    console.log("HERE");
+                    console.log(resp.error);
+                    if (resp.errorMessage === 19) {
+                        this.formInputs.pseudo = '';
+                        errMsg = 'Le pseudo est déjà utilisé'
+                    } else {
+                        errMsg = "Il y a eu une erreur pour ajouter l'utilisateurs, merci de contacter un routier";
+                    }
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: errMsg,
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                } else {
+                    this.$buefy.toast.open({
+                        message: "L'utilisateur a bien été ajouté",
+                        type: 'is-success'
+                    })
+                    this.$router.go()
+                }
+            })
+            ipcRenderer.send('addUser', resp);
         }
     },
 }

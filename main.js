@@ -3,7 +3,7 @@ const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const url = require("url");
 const path = require("path");
 
-// let db = require('./js/db.js');
+let db = require('./js/db.js');
 
 app.allowRendererProcessReuse = false;
 
@@ -50,41 +50,49 @@ ipcMain.on('close', () => {
     app.quit()
 })
 
-ipcMain.on('test', ()=> {
-    console.log("IT WORKS");
-})
+function formatResponse(err, data) {
+    if (err) return {
+        'error' : true,
+        'errorMessage' : err.errno,
+        'data' : null
+    }
+    else return {
+        'error' : false,
+        'data' : data
+    }
+}
 
 // Users
 
-// ipcMain.on('getUsers', (event) => {
-//     db.users.getUsers((err, users) => {
-//         event.reply('getUsersReply', err, users)
-//     })
-// })
+ipcMain.on('getUsers', (event) => {
+    db.users.getUsers((err, users) => {
+        event.reply('getUsersReply', formatResponse(err, users));
+    })
+})
 
-// ipcMain.on('getUser', (event) => {
-//     db.users.getUser((err, user) => {
-//         event.reply('getUserReply', err, user)
-//     })
-// })
+ipcMain.on('getUser', (event, user) => {
+    db.users.getUser((err, user) => {
+        event.reply('getUserReply', err, user)
+    })
+})
 
-// ipcMain.on('addUser', (event, user) => {
-//     db.users.addUser(user, (err) => {
-//         event.reply('addUserReply', err)
-//     })
-// })
+ipcMain.on('addUser', (event, user) => {
+    db.users.addUser(user, (err) => {
+        event.reply('addUserReply', formatResponse(err))
+    })
+})
 
-// ipcMain.on('updateUser', (event, pseudo, user) => {
-//     db.users.updateUser(pseudo, user, (err) => {
-//         event.reply('updateUserReply', err)
-//     })
-// })
+ipcMain.on('updateUser', (event, pseudo, user) => {
+    db.users.updateUser(pseudo, user, (err) => {
+        event.reply('updateUserReply', err)
+    })
+})
 
-// ipcMain.on('removeUser', (event, pseudo) => {
-//     db.users.removeUser(pseudo, (err) => {
-//         event.reply('removeUserReply', err)
-//     })
-// })
+ipcMain.on('removeUser', (event, pseudo) => {
+    db.users.removeUser(pseudo, (err) => {
+        event.reply('removeUserReply', err)
+    })
+})
 
 // ipcMain.on('addRond', (event, pseudo, number) => {
 //     db.users.addRond(pseudo, number, (err) => {

@@ -63,8 +63,10 @@ function getUser(pseudo, callback) {
 function addUser(user, callback) {
     db.run(`INSERT INTO Users 
         (pseudo, name, firstName, totem, quali, staff, sex, birthday, rond, croix) 
-        values (${user.pseudo},${user.name},${user.firstName},${user.totem},${user.quali},
-            ${user.staff},${user.sex},${user.birthday},0,0)`, 
+        values 
+        (?,?,?,?,?,?,?,?,0,0)`, 
+        [user.pseudo, user.name,user.firstName,user.totem,user.quali,
+        user.staff,user.sex,user.birthday],
         (err) => {
             if (err) console.log(err)
             if (callback != undefined) callback(err)

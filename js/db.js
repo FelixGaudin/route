@@ -98,7 +98,8 @@ function updateUser(user, callback) {
 }
 
 function removeUser(pseudo, callback) {
-    db.run(`DELETE FROM Users WHERE pseudo = ${pseudo}`,
+    db.run(`DELETE FROM Users WHERE pseudo = ?`,
+        [pseudo],
         (err) => {
             if (err) console.log(err)
             if (callback != undefined) callback(err)

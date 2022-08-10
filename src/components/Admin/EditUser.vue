@@ -9,7 +9,7 @@
                 <b-field>
                     <b-button type="is-danger"
                         icon-right="delete" 
-                        @click="() => {deleteUser(props.row.pseudo)}"
+                        @click="() => {deleteUser(props.row.oldPseudo)}"
                         />
                     <!-- <b-input v-model="props.row.pseudo" placeholder="Pseudo"></b-input> -->
                 </b-field>
@@ -125,7 +125,7 @@
         <br/>
         <br/>
         <br/>
-        <b-button @click="askApplyChanges" size="is-medium" type="is-success">Valider</b-button>
+        <b-button @click="applyChanges" size="is-medium" type="is-success">Valider</b-button>
         <b-button @click="clear" size="is-medium" type="is-warning">Annuler</b-button>
     </div>
 </template>
@@ -180,7 +180,6 @@ export default {
         },
         refreshDisplay() {
             this.displayedUsers = this.users
-                .filter(user => !this.toDeleteUsers.has(user.pseudo))
                 // https://stackoverflow.com/questions/597588/how-do-you-clone-an-array-of-objects-in-javascript
                 .map(a => {return {...a}}) 
         },
@@ -197,8 +196,23 @@ export default {
                 type: 'is-danger',
                 hasIcon: true,
                 onConfirm: () => {
-                    this.toDeleteUsers.add(pseudo)
-                    this.refreshDisplay();
+                    ipcRenderer.on('removeUserReply', (event, resp) => {
+                        if (resp.error) {
+                            this.$buefy.dialog.alert({
+                                title: 'ERREUR',
+                                message: "Il y a eu une erreur pour supprimer l'utilisateur, merci de contacter un routier",
+                                type: 'is-danger',
+                                hasIcon: true,
+                                icon: 'times-circle',
+                                iconPack: 'fa',
+                                ariaRole: 'alertdialog',
+                                ariaModal: true
+                            })
+                        } else {
+                            this.updateList();
+                        }
+                    })
+                    ipcRenderer.send('removeUser', pseudo)
                 }
             })
         },
@@ -220,7 +234,7 @@ export default {
                 this.$buefy.dialog.confirm({
                     message: 'Êtes vous sûr de vos changements ?',
                     onConfirm: () => this.applyChanges(),
-                    confirmText: "Oui",
+                    confirmText: "Supprimer l'utilisateur",
                     cancelText : "Annuler",
                 })
         },
@@ -268,32 +282,35 @@ export default {
                 }
             })
             ipcRenderer.send('updateUsers', toModifyUser)
+        },
+        updateList() {
+            ipcRenderer.once('getUsersReply', (event, resp) => {
+                if (resp.error) {
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                } else {
+                    this.users = resp.data.map((user) => {
+                        user.birthday = new Date(user.birthday*1000);
+                        user.oldPseudo = user.pseudo;
+                        this.usersHashes[user.pseudo] = JSON.stringify(user);
+                        return user;
+                    });
+                    this.refreshDisplay();
+                }
+            })
+            ipcRenderer.send('getUsers')
         }
     },
     beforeMount() {
-        ipcRenderer.once('getUsersReply', (event, resp) => {
-            if (resp.error) {
-                this.$buefy.dialog.alert({
-                    title: 'ERREUR',
-                    message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
-                    type: 'is-danger',
-                    hasIcon: true,
-                    icon: 'times-circle',
-                    iconPack: 'fa',
-                    ariaRole: 'alertdialog',
-                    ariaModal: true
-                })
-            } else {
-                this.users = resp.data.map((user) => {
-                    user.birthday = new Date(user.birthday*1000);
-                    user.oldPseudo = user.pseudo;
-                    this.usersHashes[user.pseudo] = JSON.stringify(user);
-                    return user;
-                });
-                this.refreshDisplay();
-            }
-        })
-        ipcRenderer.send('getUsers')
+        this.updateList()
     }
 }
 </script>

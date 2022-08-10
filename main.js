@@ -113,23 +113,14 @@ async function updateUsers(users) {
 }
 
 ipcMain.on('updateUsers', (event, users) => {
-    console.log("Update Users");
     updateUsers(users).then((err) => {
         event.reply('updateUsersReply', formatResponse(err));
     });
-    // var results = Promise.all(users.map(updateUser));
-    // results.then((data) => {
-    //     console.log(data);
-    //     event.reply('updateUsers', formatResponse(err))
-    // })
-    // db.users.updateUser(user, (err) => {
-    //     event.reply('updateUsersReply', err)
-    // })
 })
 
 ipcMain.on('removeUser', (event, pseudo) => {
     db.users.removeUser(pseudo, (err) => {
-        event.reply('removeUserReply', err)
+        event.reply('removeUserReply', formatResponse(err))
     })
 })
 

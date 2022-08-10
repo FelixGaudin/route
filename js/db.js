@@ -17,7 +17,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             quali       text,
             staff       text,
             sex         text,
-            birthday    text,
+            birthday    integer,
             rond        integer,
             croix       integer
             )`,
@@ -83,12 +83,14 @@ function addUser(user, callback) {
         })
 }
 
-function updateUser(pseudo, user, callback) {
+function updateUser(user, callback) {
     db.run(`UPDATE Users
-        SET pseudo = ${user.pseudo}, name = ${user.name}, firstName = ${user.firstName},
-        totem = ${user.totem}, quali = ${user.quali}, staff = ${user.staff},
-        sex = ${user.sex}, birthday = ${user.birthday}
-        WHERE pseudo = ${pseudo}`, 
+        SET pseudo = ?, name = ?, firstName = ?,
+        totem = ?, quali = ?, staff = ?,
+        sex = ?, birthday = ?
+        WHERE pseudo = ?`,
+        [user.pseudo, user.name, user.firstName, user.totem, user.quali, user.staff,
+        user.sex, user.birthday, user.oldPseudo],
         (err) => {
             if (err) console.log(err)
             if (callback != undefined) callback(err)

@@ -88,10 +88,43 @@ ipcMain.on('addUser', (event, user) => {
     })
 })
 
-ipcMain.on('updateUser', (event, pseudo, user) => {
-    db.users.updateUser(pseudo, user, (err) => {
+function updateUser(user) {
+    return new Promise(resolve => {
+        db.users.updateUser(user, (err) => {
+            resolve(err);
+        })
+    })
+}
+
+ipcMain.on('updateUser', (event, user) => {
+    db.users.updateUser(user, (err) => {
         event.reply('updateUserReply', err)
     })
+})
+
+async function updateUsers(users) {
+    let err;
+    for (let i = 0; i < users.length; i++) {
+        err = await updateUser(users[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+ipcMain.on('updateUsers', (event, users) => {
+    console.log("Update Users");
+    updateUsers(users).then((err) => {
+        event.reply('updateUsersReply', formatResponse(err));
+    });
+    // var results = Promise.all(users.map(updateUser));
+    // results.then((data) => {
+    //     console.log(data);
+    //     event.reply('updateUsers', formatResponse(err))
+    // })
+    // db.users.updateUser(user, (err) => {
+    //     event.reply('updateUsersReply', err)
+    // })
 })
 
 ipcMain.on('removeUser', (event, pseudo) => {

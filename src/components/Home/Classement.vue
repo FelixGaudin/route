@@ -138,9 +138,7 @@ export default {
                     ariaModal: true
                 })
             } else {
-                console.log(resp.data);
                 this.users = resp.data;
-                console.log(this.users);
             }
         })
         ipcRenderer.send('getUsers')

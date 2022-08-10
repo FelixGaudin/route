@@ -57,7 +57,6 @@
             <!-- Totem -->
             <b-field label="Totem" class="form-field">
                 <b-input 
-                    required 
                     size="is-medium" 
                     v-model="formInputs.totem"></b-input>
             </b-field>
@@ -65,7 +64,6 @@
             <!-- Quali -->
             <b-field label="Quali" class="form-field">
                 <b-input 
-                    required
                     size="is-medium" 
                     v-model="formInputs.quali"></b-input>
             </b-field>
@@ -168,7 +166,7 @@ export default {
         },
         submit() {
             let birthday = this.formInputs['birthday']
-            // set l'heure à midi pour éviter les soucis de timezone ?
+            // Correct timezone
             let timezoneOffset = birthday.getTimezoneOffset()*60;
             let birthday_formated = Math.floor((birthday / 1000)-timezoneOffset)
             let resp = {

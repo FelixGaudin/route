@@ -19,8 +19,14 @@
                 v-slot="props"
                 field="pseudo"
                 width="6vw">
-                <b-field>
-                    <b-input v-model="props.row.pseudo" placeholder="Pseudo"></b-input>
+                <b-field
+                    :type="isPseudoUnique(props.row.pseudo)? '': 'is-danger'"
+                    :message="isPseudoUnique(props.row.pseudo)? '': 'Le pseudo est utilisé plusieurs fois'"
+                    >
+                    <b-input 
+                        v-model="props.row.pseudo" 
+                        placeholder="Pseudo"
+                        required></b-input>
                 </b-field>
             </b-table-column>
             <b-table-column
@@ -29,7 +35,10 @@
                 field="name"
                 width="6vw">
                 <b-field>
-                    <b-input v-model="props.row.name" placeholder="Nom"></b-input>
+                    <b-input 
+                        v-model="props.row.name" 
+                        placeholder="Nom"
+                        required></b-input>
                 </b-field>
             </b-table-column>
             <b-table-column
@@ -38,7 +47,10 @@
                 field="firstName"
                 width="6vw">
                 <b-field>
-                    <b-input v-model="props.row.firstName" placeholder="Prénom"></b-input>
+                    <b-input 
+                        v-model="props.row.firstName" 
+                        placeholder="Prénom"
+                        required></b-input>
                 </b-field>
             </b-table-column>
             <b-table-column
@@ -85,7 +97,8 @@
                 <b-field>
                     <b-select 
                         placeholder="Sexe" 
-                        v-model="props.row.sex">
+                        v-model="props.row.sex"
+                        required>
                         <option value="m">Homme</option>
                         <option value="f">Femme</option>
                         <option value="o">Autre</option>
@@ -93,7 +106,7 @@
                 </b-field>
             </b-table-column>
             <b-table-column
-                label="Sexe"
+                label="Anniversaire"
                 v-slot="props"
                 field="sex"
                 width="12vw">
@@ -102,7 +115,8 @@
                         v-model="props.row.birthday"
                         placeholder="Date d'anniversaire"
                         icon="calendar-today"
-                        trap-focus>
+                        trap-focus
+                        required>
                     </b-datepicker>
                 </b-field>
             </b-table-column>
@@ -111,7 +125,7 @@
         <br/>
         <br/>
         <br/>
-        <b-button @click="printBoard" size="is-medium" type="is-success">Valider</b-button>
+        <b-button @click="askApplyChanges" size="is-medium" type="is-success">Valider</b-button>
         <b-button @click="clear" size="is-medium" type="is-warning">Annuler</b-button>
     </div>
 </template>
@@ -126,6 +140,8 @@ export default {
         return {
             // to remove list
             // modified list
+            // list of the "hashes" of the users before being modified
+            usersHashes : {},
             users : [],
             displayedUsers : [],
             toDeleteUsers : new Set(),
@@ -152,9 +168,21 @@ export default {
         // degre : Number,
     },
     methods : {
+        isPseudoUnique(pseudo) {
+            let v = this.displayedUsers
+                .filter((user) => {
+                return user.pseudo
+                    .toString()
+                    .toLowerCase()
+                    .localeCompare(pseudo.toLowerCase()) == 0
+            }).length;
+            return v === 1;
+        },
         refreshDisplay() {
             this.displayedUsers = this.users
                 .filter(user => !this.toDeleteUsers.has(user.pseudo))
+                // https://stackoverflow.com/questions/597588/how-do-you-clone-an-array-of-objects-in-javascript
+                .map(a => {return {...a}}) 
         },
         clear() {
             this.toDeleteUsers = new Set();
@@ -188,12 +216,62 @@ export default {
                 }
             })
         },
-        printBoard() {
-            console.log(this.getResponses());
+        askApplyChanges() {
+                this.$buefy.dialog.confirm({
+                    message: 'Êtes vous sûr de vos changements ?',
+                    onConfirm: () => this.applyChanges(),
+                    confirmText: "Oui",
+                    cancelText : "Annuler",
+                })
+        },
+        applyChanges() {
+            let toModifyUser = this.displayedUsers
+                // Get modified users
+                .filter((user) => JSON.stringify(user).localeCompare(this.usersHashes[user.oldPseudo]) !== 0)
+                // Deepcopy those users
+                .map(a => {return {...a}})
+                // Format the date
+                .map((user) => {
+                    let birthday = user.birthday
+                    let timezoneOffset = birthday.getTimezoneOffset()*60;
+                    user.birthday = Math.floor((birthday / 1000)-timezoneOffset)
+                    return user;
+                })
+            ipcRenderer.once('updateUsersReply', (event, resp) => {
+                if (resp.error) {
+                    let errMsg;
+                    if (resp.errorMessage === 19) {
+                        this.formInputs.pseudo = '';
+                        errMsg = 'Un pseudo est déjà utilisé'
+                    } else {
+                        errMsg = "Il y a eu une erreur pour modifier l'utilisateurs, merci de contacter un routier";
+                    }
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: errMsg,
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                } else {
+                    this.$buefy.dialog.alert({
+                        title: 'Succes',
+                        message: "Le(s) utilisateur(s) ont bien été modifiés",
+                        type: 'is-success',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true,
+                        onConfirm : () => {this.$router.go()}
+                    })
+                }
+            })
+            ipcRenderer.send('updateUsers', toModifyUser)
         }
     },
     beforeMount() {
-        ipcRenderer.on('getUsersReply', (event, resp) => {
+        ipcRenderer.once('getUsersReply', (event, resp) => {
             if (resp.error) {
                 this.$buefy.dialog.alert({
                     title: 'ERREUR',
@@ -206,12 +284,12 @@ export default {
                     ariaModal: true
                 })
             } else {
-                // console.log(resp.data);
                 this.users = resp.data.map((user) => {
                     user.birthday = new Date(user.birthday*1000);
+                    user.oldPseudo = user.pseudo;
+                    this.usersHashes[user.pseudo] = JSON.stringify(user);
                     return user;
                 });
-                // console.log(this.users);
                 this.refreshDisplay();
             }
         })

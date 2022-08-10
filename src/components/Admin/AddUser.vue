@@ -170,7 +170,7 @@ export default {
             let birthday = this.formInputs['birthday']
             // set l'heure à midi pour éviter les soucis de timezone ?
             let timezoneOffset = birthday.getTimezoneOffset()*60;
-            let birthday_formated = Math.floor((birthday / 1000)-timezoneOffset).toString()
+            let birthday_formated = Math.floor((birthday / 1000)-timezoneOffset)
             let resp = {
                 pseudo    : this.formInputs['pseudo'],
                 name      : this.formInputs['name'],
@@ -201,11 +201,14 @@ export default {
                         ariaModal: true
                     })
                 } else {
-                    this.$buefy.toast.open({
-                        message: "L'utilisateur a bien été ajouté",
-                        type: 'is-success'
+                    this.$buefy.dialog.alert({
+                        title: 'Succes',
+                        message: "L'utilisateur a bien été ajouté !",
+                        type: 'is-success',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true,
+                        onConfirm : () => {this.$router.go()}
                     })
-                    this.$router.go()
                 }
             })
             ipcRenderer.send('addUser', resp);

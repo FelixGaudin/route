@@ -1,6 +1,19 @@
 <template>
     <div class="centered">
-        <b-table :data="users">
+        <b-table :data="displayedUsers">
+            <b-table-column
+                label=""
+                field="delete"
+                v-slot="props"
+                width="6vw">
+                <b-field>
+                    <b-button type="is-danger"
+                        icon-right="delete" 
+                        @click="() => {deleteUser(props.row.pseudo)}"
+                        />
+                    <!-- <b-input v-model="props.row.pseudo" placeholder="Pseudo"></b-input> -->
+                </b-field>
+            </b-table-column>
             <b-table-column
                 label="Pseudo"
                 v-slot="props"
@@ -73,9 +86,9 @@
                     <b-select 
                         placeholder="Sexe" 
                         v-model="props.row.sex">
-                        <option value="Homme">Homme</option>
-                        <option value="Femme">Femme</option>
-                        <option value="Autres">Autre</option>
+                        <option value="m">Homme</option>
+                        <option value="f">Femme</option>
+                        <option value="o">Autre</option>
                     </b-select>
                 </b-field>
             </b-table-column>
@@ -99,87 +112,111 @@
         <br/>
         <br/>
         <b-button @click="printBoard" size="is-medium" type="is-success">Valider</b-button>
+        <b-button @click="clear" size="is-medium" type="is-warning">Annuler</b-button>
     </div>
 </template>
 
 <script>
+
+const {ipcRenderer} = window.require("electron")
+
 export default {
-  name: 'EditUser',
-  data() {
-      return {
-          users : [
-              {
-                pseudo : 'Basenji',
-                name : 'Gaudin',
-                firstName : 'Félix',
-                totem : 'Basenji',
-                quali : 'Ayahuasca',
-                staff : 'Pi 2',
-                sex : 'Homme',
-                birthday: undefined,
-              },
-              {
-                pseudo : 'Dibatag',
-                name : 'Gaudin',
-                firstName : 'Félix',
-                totem : 'Basenji',
-                quali : 'Ayahuasca',
-                staff : 'Pi 2',
-                sex : 'Homme',
-                birthday: undefined,
-              },
-              {
-                pseudo : 'Lion',
-                name : 'Gaudin',
-                firstName : 'Félix',
-                totem : 'Basenji',
-                quali : 'Ayahuasca',
-                staff : 'Pi 2',
-                sex : 'Homme',
-                birthday: undefined,
-              },
-          ],
-          staffs : [
-              'Aucun',
-              'Broceliande',
-              'Petit Bonheur',
-              'Mowha',
-              'Waigunga',
-              'Seeonee',
-              'ODC',
-              'Orion',
-              'Pi 1',
-              'Pi 2',
-              'Route',
-              "Chefs d'u",
-              'Ancien'
-              ]
-      }
-  },
-  props: {
-    // name: String,
-    // price: Number,
-    // degre : Number,
-  },
-  methods : {
-      getResponses() {
-          return this.users.map((e) => {
-              return {
-                  pseudo : e.pseudo,
-                  name : e.name,
-                  firstName : e.firstName,
-                  totem : e.totem,
-                  quali : e.quali,
-                  staff : e.staff,
-                  sex : e.sex,
-                  birthday : e.birthday,
-              }
-          })
-      },
-      printBoard() {
-          console.log(this.getResponses());
-      }
-  }
+    name: 'EditUser',
+    data() {
+        return {
+            // to remove list
+            // modified list
+            users : [],
+            displayedUsers : [],
+            toDeleteUsers : new Set(),
+            staffs : [
+                'Aucun',
+                'Broceliande',
+                'Petit Bonheur',
+                'Mowha',
+                'Waigunga',
+                'Seeonee',
+                'ODC',
+                'Orion',
+                'Pi 1',
+                'Pi 2',
+                'Route',
+                "Chefs d'u",
+                'Ancien'
+                ]
+        }
+    },
+    props: {
+        // name: String,
+        // price: Number,
+        // degre : Number,
+    },
+    methods : {
+        refreshDisplay() {
+            this.displayedUsers = this.users
+                .filter(user => !this.toDeleteUsers.has(user.pseudo))
+        },
+        clear() {
+            this.toDeleteUsers = new Set();
+            this.refreshDisplay()
+        },
+        deleteUser(pseudo) {
+            this.$buefy.dialog.confirm({
+                title: 'Supprimer un utilisateur',
+                message: "Êtes vous sûr de vouloir <b>supprimer</b> l'utilisateur ?",
+                confirmText: "Supprimer l'utilisateur",
+                cancelText : "Annuler",
+                type: 'is-danger',
+                hasIcon: true,
+                onConfirm: () => {
+                    this.toDeleteUsers.add(pseudo)
+                    this.refreshDisplay();
+                }
+            })
+        },
+        getResponses() {
+            return this.users.map((e) => {
+                return {
+                    pseudo : e.pseudo,
+                    name : e.name,
+                    firstName : e.firstName,
+                    totem : e.totem,
+                    quali : e.quali,
+                    staff : e.staff,
+                    sex : e.sex,
+                    birthday : e.birthday,
+                }
+            })
+        },
+        printBoard() {
+            console.log(this.getResponses());
+        }
+    },
+    beforeMount() {
+        ipcRenderer.on('getUsersReply', (event, resp) => {
+            if (resp.error) {
+                this.$buefy.dialog.alert({
+                    title: 'ERREUR',
+                    message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                })
+            } else {
+                // console.log(resp.data);
+                this.users = resp.data.map((user) => {
+                    user.birthday = new Date(user.birthday*1000);
+                    return user;
+                });
+                // console.log(this.users);
+                this.refreshDisplay();
+            }
+        })
+        ipcRenderer.send('getUsers')
+    }
 }
 </script>
 

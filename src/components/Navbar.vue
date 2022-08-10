@@ -57,11 +57,14 @@ export default {
             closeOnConfirm: false,
             onConfirm: (value, {close}) => {
                 this.$buefy.toast.open(`Your message is sending...`)
-                setTimeout(() => {
-                    this.$buefy.toast.open(`Bievenue !`)
-                    close()
-                    this.$router.push('/admin')
-                }, 1000)
+                // setTimeout(() => {
+                //     this.$buefy.toast.open(`Bievenue !`)
+                //     close()
+                //     this.$router.push('/admin')
+                // }, 1000)
+                this.$buefy.toast.open(`Bievenue !`)
+                close()
+                this.$router.push('/admin')
             }
         })
     },

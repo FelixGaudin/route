@@ -124,11 +124,11 @@ ipcMain.on('removeUser', (event, pseudo) => {
     })
 })
 
-// ipcMain.on('addRond', (event, pseudo, number) => {
-//     db.users.addRond(pseudo, number, (err) => {
-//         event.reply('addRondReply', err)
-//     })
-// })
+ipcMain.on('addRond', (event, pseudo, number) => {
+    db.users.addRond(pseudo, number, (err) => {
+        event.reply('addRondReply', formatResponse(err))
+    })
+})
 
 // ipcMain.on('addCroix', (event, pseudo, number) => {
 //     db.users.addCroix(pseudo, number, (err) => {

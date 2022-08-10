@@ -107,7 +107,8 @@ function removeUser(pseudo, callback) {
 }
 
 function addRond(pseudo, number, callback) {
-    db.run(`UPDATE Users SET rond = rond + ${number} WHERE pseudo = ${pseudo}`, 
+    db.run(`UPDATE Users SET rond = rond + ? WHERE pseudo = ?`, 
+        [number, pseudo],
         (err) => {
             if (err) console.log(err)
             if (callback != undefined) callback(err)

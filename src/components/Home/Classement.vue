@@ -40,7 +40,7 @@
                 :searchable="!searchEnable">
                 <router-link :to="'/shop/' + props.row.name">
                     <span class="rowName">
-                        {{ props.row.name }}
+                        {{ props.row.pseudo }}
                     </span>
                 </router-link>
                 

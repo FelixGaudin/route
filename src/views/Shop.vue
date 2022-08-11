@@ -1,11 +1,11 @@
 <template>
     <div class="shop">
+        <span>User = {{ $route.params.user }}</span>
         <div class="beerList">
             <div v-for="beer in beers" :key="beer.name">
                 <BeerCard :name="beer.name" :price="beer.price" :degre="beer.degre"/>
             </div>
         </div>
-        <span>User = {{ $route.params.user }}</span>
     </div>
 </template>
 
@@ -88,6 +88,8 @@ export default {
         }
     ],
       }
+  },
+  methods : {
   }
 }
 </script>

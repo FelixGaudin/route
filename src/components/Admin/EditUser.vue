@@ -9,9 +9,8 @@
                 <b-field>
                     <b-button type="is-danger"
                         icon-right="delete" 
-                        @click="() => {deleteUser(props.row.oldPseudo)}"
+                        @click="() => {deleteUser(props.row.id)}"
                         />
-                    <!-- <b-input v-model="props.row.pseudo" placeholder="Pseudo"></b-input> -->
                 </b-field>
             </b-table-column>
             <b-table-column
@@ -138,13 +137,10 @@ export default {
     name: 'EditUser',
     data() {
         return {
-            // to remove list
-            // modified list
             // list of the "hashes" of the users before being modified
             usersHashes : {},
             users : [],
             displayedUsers : [],
-            toDeleteUsers : new Set(),
             staffs : [
                 'Aucun',
                 'Broceliande',
@@ -162,11 +158,6 @@ export default {
                 ]
         }
     },
-    props: {
-        // name: String,
-        // price: Number,
-        // degre : Number,
-    },
     methods : {
         isPseudoUnique(pseudo) {
             let v = this.displayedUsers
@@ -178,16 +169,12 @@ export default {
             }).length;
             return v === 1;
         },
-        refreshDisplay() {
+        clear() {
             this.displayedUsers = this.users
                 // https://stackoverflow.com/questions/597588/how-do-you-clone-an-array-of-objects-in-javascript
                 .map(a => {return {...a}}) 
         },
-        clear() {
-            this.toDeleteUsers = new Set();
-            this.refreshDisplay()
-        },
-        deleteUser(pseudo) {
+        deleteUser(userId) {
             this.$buefy.dialog.confirm({
                 title: 'Supprimer un utilisateur',
                 message: "Êtes vous sûr de vouloir <b>supprimer</b> l'utilisateur ?",
@@ -212,21 +199,7 @@ export default {
                             this.updateList();
                         }
                     })
-                    ipcRenderer.send('removeUser', pseudo)
-                }
-            })
-        },
-        getResponses() {
-            return this.users.map((e) => {
-                return {
-                    pseudo : e.pseudo,
-                    name : e.name,
-                    firstName : e.firstName,
-                    totem : e.totem,
-                    quali : e.quali,
-                    staff : e.staff,
-                    sex : e.sex,
-                    birthday : e.birthday,
+                    ipcRenderer.send('removeUser', userId)
                 }
             })
         },
@@ -241,7 +214,9 @@ export default {
         applyChanges() {
             let toModifyUser = this.displayedUsers
                 // Get modified users
-                .filter((user) => JSON.stringify(user).localeCompare(this.usersHashes[user.oldPseudo]) !== 0)
+                .filter((user) => 
+                    JSON.stringify(user)
+                    .localeCompare(this.usersHashes[user.id]) !== 0)
                 // Deepcopy those users
                 .map(a => {return {...a}})
                 // Format the date
@@ -277,7 +252,7 @@ export default {
                         type: 'is-success',
                         ariaRole: 'alertdialog',
                         ariaModal: true,
-                        onConfirm : () => {this.$router.go()}
+                        onConfirm : () => {this.updateList()}
                     })
                 }
             })
@@ -299,11 +274,10 @@ export default {
                 } else {
                     this.users = resp.data.map((user) => {
                         user.birthday = new Date(user.birthday*1000);
-                        user.oldPseudo = user.pseudo;
-                        this.usersHashes[user.pseudo] = JSON.stringify(user);
+                        this.usersHashes[user.id] = JSON.stringify(user);
                         return user;
                     });
-                    this.refreshDisplay();
+                    this.clear();
                 }
             })
             ipcRenderer.send('getUsers')

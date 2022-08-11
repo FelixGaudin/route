@@ -10,7 +10,8 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     } else {
         console.log('Connected to the SQLite database.')
         db.run(`CREATE TABLE IF NOT EXISTS Users (
-            pseudo      text PRIMARY KEY,
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            pseudo      text UNIQUE,
             name        text, 
             firstName   text, 
             totem       text, 
@@ -29,13 +30,14 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             price       integer,
             degre       real,
             volume      real,
-            isAvaible   integer
+            image       text,
+            isAvailable integer
             )`, 
             (err) => {if (err) console.log(err)})
         db.run( // TODO: Check update
             `CREATE TABLE IF NOT EXISTS Shopping (
-            id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            pseudo      text,
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId      integer,
             beerId      integer,
             date        text,
             number      integer
@@ -49,7 +51,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
 function getUsers(callback) {
     db.all("SELECT * FROM Users", (err, rows) => {
         if (err) console.log(err)
-        if (callback != undefined) callback(err, rows)
+        if (callback) callback(err, rows)
     })
 }
 
@@ -66,7 +68,7 @@ function getPseudos(callback) {
 function getUser(pseudo, callback) {
     db.get(`SELECT * FROM Users WHERE pseudo = "${pseudo}"`, (err, row) => {
         if (err) console.log(err);
-        callback(err, row);
+        if (callback) callback(err, row);
     })
 }
 
@@ -88,21 +90,23 @@ function updateUser(user, callback) {
         SET pseudo = ?, name = ?, firstName = ?,
         totem = ?, quali = ?, staff = ?,
         sex = ?, birthday = ?
-        WHERE pseudo = ?`,
+        WHERE id = ?`,
         [user.pseudo, user.name, user.firstName, user.totem, user.quali, user.staff,
-        user.sex, user.birthday, user.oldPseudo],
+        user.sex, user.birthday, user.id],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
-function removeUser(pseudo, callback) {
-    db.run(`DELETE FROM Users WHERE pseudo = ?`,
-        [pseudo],
+function removeUser(userId, callback) {
+    // TODO: Un isActive pour éviter de supprimer un compte 
+    console.log(`Removing id = ${userId}`);
+    db.run(`DELETE FROM Users WHERE id = ?`,
+        [userId],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
@@ -111,15 +115,16 @@ function addRond(pseudo, number, callback) {
         [number, pseudo],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
 function addCroix(pseudo, number, callback) {
-    db.run(`UPDATE Users SET croix = croix + ${number} WHERE pseudo = ${pseudo}`,
+    db.run(`UPDATE Users SET croix = croix + ? WHERE pseudo = ?`,
+        [number, pseudo],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
@@ -127,46 +132,48 @@ function resetCroix(callback) {
     db.run('UPDATE Users SET rond = rond - croix, croix = 0',
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
 // Beers
 
 function getBeers(callback) {
-    db.all("SELECT * FROM Beers", (err, rows) => {
+    db.all("SELECT * FROM Beers WHERE isAvailable != 2", (err, rows) => {
         if (err) console.log(err)
-        if (callback != undefined) callback(err, rows)
+        if (callback) callback(err, rows)
     })
 }
 
 function addBeer(beer, callback) {
     db.run(`INSERT INTO Beers 
-        (name, price, degre, volume, isAvaible) 
-        values (${beer.name},${beer.price},${beer.degre},${beer.volume},1)`,
+        (name, price, degre, volume, image, isAvailable) 
+        values (?,?,?,?,?,?)`,
+        [beer.name, beer.price, beer.degre, beer.volume, beer.image, beer.isAvailable],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
 function updateBeer(beer, callback) {
     db.run(`UPDATE Beers 
-        SET name = ${beer.name}, price = ${beer.price}, degre = ${beer.degre}, 
-        volume = ${beer.volume}, isAvaible = ${beer.isAvaible} 
-        WHERE id = ${beer.id}`,
+        SET name = ?, price = ?, degre = ?, 
+        volume = ?, image = ?, isAvailable = ? 
+        WHERE id = ?`,
+        [beer.name, beer.price, beer.degre, beer.volume, beer.image, beer.isAvailable, beer.id],
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
 function removeBeer(beerId, callback) {
-    // Set isAvaible to 2
-    db.run(`UPDATE Beers SET isAvaible = ${2} WHERE id = ${beerId}`,
+    // Set isAvailable to 2
+    db.run(`UPDATE Beers SET isAvailable = 2 WHERE id = ${beerId}`,
         (err) => {
             if (err) console.log(err)
-            if (callback != undefined) callback(err)
+            if (callback) callback(err)
         })
 }
 
@@ -188,23 +195,30 @@ function getPartyDate() {
 function getPurchases(callback) {
     db.all("SELECT * FROM Shopping", (err, rows) => {
         if (err) console.log(err)
-        if (callback != undefined) callback(err, rows)
+        if (callback) callback(err, rows)
     })
 }
 
-function buy(pseudo, beerId, number, callback) {
-    db.run(`INSERT INTO Shopping 
+function buy(userId, beerId, number, callback) {
+    db.run(
+        `INSERT INTO Shopping 
         (pseudo, beerId, date, number) 
-        values (${pseudo},${beerId},${getPartyDate()},${number})`,
-    (err) => {
-        if (err) {console.log(err);if (callback != undefined) callback(err)}
-        else {
-            db.run(`UPDATE Users SET croix = croix + ${number}*(SELECT price FROM Beers WHERE Beers.id = ${beerId}) WHERE pseudo = "${pseudo}"`,
-                (err) => {
-                    if (err) console.log(err)
-                    if (callback != undefined) callback(err)
-                })
-        }
+        values (?,?,?,?)`,
+        [userId, beerId, , number],
+        (err) => {
+            if (err) {
+                console.log(err);
+                if (callback) callback(err)
+            } else {
+                db.run(
+                    `UPDATE Users 
+                    SET croix = croix + ?*(SELECT price FROM Beers WHERE Beers.id = ?) WHERE id = ?`,
+                    [number, beerId, userId],
+                    (err) => {
+                        if (err) console.log(err)
+                        if (callback) callback(err)
+                    })
+            }
     })
 }
 

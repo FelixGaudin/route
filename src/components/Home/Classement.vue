@@ -38,7 +38,7 @@
                 width="20vw"
                 sortable
                 :searchable="!searchEnable">
-                <router-link :to="'/shop/' + props.row.name">
+                <router-link :to="'/shop/' + props.row.pseudo">
                     <span class="rowName">
                         {{ props.row.pseudo }}
                     </span>

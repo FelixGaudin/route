@@ -29,6 +29,9 @@
 </template>
 
 <script>
+
+const {ipcRenderer} = window.require("electron")
+
 export default {
   name: 'BeerCard',
   props: {
@@ -38,6 +41,7 @@ export default {
   },
   methods : {
       buyBeer(quantity) {
+        console.log(this.$route.params.user);
         this.$buefy.dialog.confirm({
             title: 'Veuillez confirmer',
             message: `Êtes vous sûr de vouloir achter ${quantity} ${this.name} ?
@@ -47,6 +51,8 @@ export default {
             confirmText: 'Oui',
             type: 'is-success',
             onConfirm: () => {
+                ipcRenderer.send("")
+
                 this.$buefy.toast.open(`Vous avez bien acheté ${quantity} ${this.name} (${quantity*this.price} croix)`)
                 this.$router.go(-1)
             }

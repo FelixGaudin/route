@@ -118,8 +118,8 @@ ipcMain.on('updateUsers', (event, users) => {
     });
 })
 
-ipcMain.on('removeUser', (event, pseudo) => {
-    db.users.removeUser(pseudo, (err) => {
+ipcMain.on('removeUser', (event, userId) => {
+    db.users.removeUser(userId, (err) => {
         event.reply('removeUserReply', formatResponse(err))
     })
 })
@@ -130,11 +130,11 @@ ipcMain.on('addRond', (event, pseudo, number) => {
     })
 })
 
-// ipcMain.on('addCroix', (event, pseudo, number) => {
-//     db.users.addCroix(pseudo, number, (err) => {
-//         event.reply('addCroixReply', err)
-//     })
-// })
+ipcMain.on('addCroix', (event, pseudo, number) => {
+    db.users.addCroix(pseudo, number, (err) => {
+        event.reply('addCroixReply', err)
+    })
+})
 
 // ipcMain.on('resetCroix', (event) => {
 //     db.users.resetCroix((err) => {
@@ -142,31 +142,79 @@ ipcMain.on('addRond', (event, pseudo, number) => {
 //     })
 // })
 
-// // Beers
+// Beers
 
-// ipcMain.on('getBeers', (event) => {
-//     db.beers.getBeers((err, beers) => {
-//         event.reply('beers', err, beers)
-//     })
-// })
+ipcMain.on('getBeers', (event) => {
+    db.beers.getBeers((err, beers) => {
+        event.reply('getBeersReply', formatResponse(err, beers))
+    })
+})
 
-// ipcMain.on('addBeer', (event, beer) => {
-//     db.beers.addBeer(beer, (err) => {
-//         event.reply('addBeerReply', err)
-//     })
-// })
+function addBeer(beer) {
+    return new Promise(resolve => {
+        db.beers.addBeer(beer, (err) => {
+            resolve(err);
+        })
+    })
+}
 
-// ipcMain.on('updateBeer', (event, beer) => {
-//     db.beers.updateBeer(beer, (err) => {
-//         event.reply('updateBeerReply', err)
-//     })
-// })
+ipcMain.on('addBeer', (event, beer) => {
+    db.beers.addBeer(beer, (err) => {
+        event.reply('addBeerReply', err)
+    })
+})
 
-// ipcMain.on('removeBeer', (event, beerId) => {
-//     db.beers.removeBeer(beerId, (err) => {
-//         event.reply('removeBeerReply', err)
-//     })
-// })
+async function addBeers(beers) {
+    let err;
+    for (let i = 0; i < beers.length; i++) {
+        err = await addBeer(beers[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+ipcMain.on('addBeers', (event, beers) => {
+    addBeers(beers).then((err) => {
+        event.reply('addBeersReply', formatResponse(err))
+    })
+})
+
+function updateBeer(beer) {
+    return new Promise(resolve => {
+        db.beers.updateBeer(beer, (err) => {
+            resolve(err);
+        })
+    })
+}
+
+ipcMain.on('updateBeer', (event, beer) => {
+    db.beers.updateBeer(beer, (err) => {
+        event.reply('updateBeerReply', err)
+    })
+})
+
+async function updateBeers(beers) {
+    let err;
+    for (let i = 0; i < beers.length; i++) {
+        err = await updateBeer(beers[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+ipcMain.on('updateBeers', (event, beers) => {
+    updateBeers(beers).then((err) => {
+        event.reply('updateBeersReply', formatResponse(err))
+    })
+})
+
+ipcMain.on('removeBeer', (event, beerId) => {
+    db.beers.removeBeer(beerId, (err) => {
+        event.reply('removeBeerReply', formatResponse(err))
+    })
+})
 
 // // Shopping
 

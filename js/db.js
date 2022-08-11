@@ -179,21 +179,6 @@ function removeBeer(beerId, callback) {
         })
 }
 
-function getPartyDate() {
-    let td = new Date();
-    let day = td.getDate();
-    let mounth = td.getMonth();
-    if (td.getHours() < 10) {
-        day--;
-        if (day == 0) {
-            day = new Date(td.getFullYear(), mounth, 0).getDate();
-            mounth--;
-        }
-    }
-    mounth++;
-    return day + "-" + mounth + "-" + td.getFullYear();
-}
-
 function getPurchases(callback) {
     db.all("SELECT * FROM Shopping", (err, rows) => {
         if (err) console.log(err)
@@ -206,7 +191,7 @@ function buy(userId, beerId, number, callback) {
         `INSERT INTO Shopping 
         (pseudo, beerId, date, number) 
         values (?,?,?,?)`,
-        [userId, beerId, , number],
+        [userId, beerId, Math.floor(Date.now()/1000), number],
         (err) => {
             if (err) {
                 console.log(err);

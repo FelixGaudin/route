@@ -20,7 +20,8 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             sex         text,
             birthday    integer,
             rond        integer,
-            croix       integer
+            croix       integer,
+            active      integer DEFAULT 1
             )`,
             (err) => {if (err) console.log(err)})
         db.run(
@@ -49,14 +50,14 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
 // Users
 
 function getUsers(callback) {
-    db.all("SELECT * FROM Users", (err, rows) => {
+    db.all("SELECT * FROM Users WHERE active == 1", (err, rows) => {
         if (err) console.log(err)
         if (callback) callback(err, rows)
     })
 }
 
 function getPseudos(callback) {
-    db.all("SELECT pseudo FROM Users", (err, rows) => {
+    db.all("SELECT pseudo FROM Users WHERE active == 1", (err, rows) => {
         if (err) console.log(err);
         if (callback) callback(
             err, 
@@ -100,15 +101,16 @@ function updateUser(user, callback) {
 }
 
 function removeUser(userId, callback) {
-    // TODO: Un isActive pour éviter de supprimer un compte 
-    console.log(`Removing id = ${userId}`);
-    db.run(`DELETE FROM Users WHERE id = ?`,
+    db.run('UPDATE Users SET active = 0 WHERE id = ?',
         [userId],
         (err) => {
-            if (err) console.log(err)
-            if (callback) callback(err)
-        })
+            if (err) console.log(err);
+            if (callback) callback(err);
+        }
+    )
 }
+
+
 
 function addRond(pseudo, number, callback) {
     db.run(`UPDATE Users SET rond = rond + ? WHERE pseudo = ?`, 

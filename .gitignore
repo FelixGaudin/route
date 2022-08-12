@@ -24,3 +24,5 @@ pnpm-debug.log*
 
 # The DB brrrr
 *.sqlite
+
+release-builds

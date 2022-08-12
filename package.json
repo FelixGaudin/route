@@ -9,12 +9,16 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy": "sh deploy.sh"
+    "deploy": "sh deploy.sh",
+    "postinstall": "electron-builder install-app-deps",
+    "winBuild" : "electron-packager . LaRoute --platform=win32 --arch=x64 --out=release-builds"
   },
   "dependencies": {
     "@vue/cli-service-global": "^4.5.15",
     "buefy": "^0.9.10",
     "core-js": "^3.6.5",
+    "electron-builder": "^23.3.3",
+    "electron-rebuild": "^3.2.9",
     "sqlite3": "^5.0.2",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0"

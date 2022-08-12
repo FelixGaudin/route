@@ -73,10 +73,6 @@
 <script>
 const {ipcRenderer} = window.require("electron")
 
-function randInt() {
-    return Math.floor(Math.random() * 101);
-}
-
 export default {
     data() {
         const users = [

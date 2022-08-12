@@ -1,15 +1,18 @@
 <template>
     <div class="shop">
-        <span>User = {{ $route.params.user }}</span>
+        <span>User = {{ $route.params.userId }}</span>
         <div class="beerList">
             <div v-for="beer in beers" :key="beer.name">
-                <BeerCard :name="beer.name" :price="beer.price" :degre="beer.degre"/>
+                <BeerCard :name="beer.name" :price="beer.price" :degre="beer.degre" :beerId="beer.id"/>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+
+const {ipcRenderer} = window.require("electron")
+
 import BeerCard from '@/components/Shop/BeerCard.vue'
 
 export default {
@@ -90,6 +93,27 @@ export default {
       }
   },
   methods : {
+  },
+  beforeMount() {
+    ipcRenderer.once("getAvailableBeersReply", (event, resp) => {
+        console.log("OK");
+        if (resp.error) {
+            this.$buefy.dialog.alert({
+                title: 'ERREUR',
+                message: "Il y a eu une erreur pour recupérer les bières, merci de contacter un routier",
+                type: 'is-danger',
+                hasIcon: true,
+                icon: 'times-circle',
+                iconPack: 'fa',
+                ariaRole: 'alertdialog',
+                ariaModal: true
+            })
+        } else {
+            console.log(resp.data);
+            this.beers = resp.data
+        }
+    });
+    ipcRenderer.send("getAvailableBeers");
   }
 }
 </script>

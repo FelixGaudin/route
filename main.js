@@ -150,6 +150,12 @@ ipcMain.on('getBeers', (event) => {
     })
 })
 
+ipcMain.on('getAvailableBeers', (event) => {
+    db.beers.getAvailableBeers((err, beers) => {
+        event.reply('getAvailableBeersReply', formatResponse(err, beers))
+    })
+})
+
 function addBeer(beer) {
     return new Promise(resolve => {
         db.beers.addBeer(beer, (err) => {
@@ -218,17 +224,17 @@ ipcMain.on('removeBeer', (event, beerId) => {
 
 // // Shopping
 
-// ipcMain.on('getPurchases', (event) => {
-//     db.shopping.getPurchases((err, purchases) => {
-//         event.reply('getPurchasesReply', err, purchases)
-//     })
-// })
+ipcMain.on('getPurchases', (event) => {
+    db.shopping.getPurchases((err, purchases) => {
+        event.reply('getPurchasesReply', err, purchases)
+    })
+})
 
-// ipcMain.on('buy', (event, pseudo, beerId, number) => {
-//     db.shopping.buy(pseudo, beerId, number, (err) => {
-//         event.reply('buyReply', err)
-//     })
-// })
+ipcMain.on('buy', (event, userId, beerId, number) => {
+    db.shopping.buy(userId, beerId, number, (err) => {
+        event.reply('buyReply', formatResponse(err))
+    })
+})
 
 
 const mainMenuTemplate = [

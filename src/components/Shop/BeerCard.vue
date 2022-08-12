@@ -35,13 +35,16 @@ const {ipcRenderer} = window.require("electron")
 export default {
   name: 'BeerCard',
   props: {
+    beerId: Number,
     name: String,
     price: Number,
     degre : Number,
+    image : String,
+    userId : Number
   },
   methods : {
       buyBeer(quantity) {
-        console.log(this.$route.params.user);
+        console.log(this.$route.params.userId);
         this.$buefy.dialog.confirm({
             title: 'Veuillez confirmer',
             message: `Êtes vous sûr de vouloir achter ${quantity} ${this.name} ?
@@ -51,10 +54,26 @@ export default {
             confirmText: 'Oui',
             type: 'is-success',
             onConfirm: () => {
-                ipcRenderer.send("")
+                ipcRenderer.once("buyReply", (event, resp) => {
+                    if (resp.error) {
+                        this.$buefy.dialog.alert({
+                            title: 'ERREUR',
+                            message: "Il y a eu une erreur pour acherter le(s) bière(s), merci de contacter un routier",
+                            type: 'is-danger',
+                            hasIcon: true,
+                            icon: 'times-circle',
+                            iconPack: 'fa',
+                            ariaRole: 'alertdialog',
+                            ariaModal: true
+                        })
 
-                this.$buefy.toast.open(`Vous avez bien acheté ${quantity} ${this.name} (${quantity*this.price} croix)`)
-                this.$router.go(-1)
+                    } else {
+                        this.$buefy.toast.open(`Vous avez bien acheté ${quantity} ${this.name} (${quantity*this.price} croix)`)
+                        this.$router.go(-1)
+                    }
+                })
+                ipcRenderer.send("buy", this.$route.params.userId, this.beerId, quantity);
+
             }
         })
       },

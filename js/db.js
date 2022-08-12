@@ -11,7 +11,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
         console.log('Connected to the SQLite database.')
         db.run(`CREATE TABLE IF NOT EXISTS Users (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            pseudo      text UNIQUE,
+            pseudo      text,
             name        text, 
             firstName   text, 
             totem       text, 
@@ -147,6 +147,13 @@ function getBeers(callback) {
     })
 }
 
+function getAvailableBeers(callback) {
+    db.all("SELECT * FROM Beers WHERE isAvailable == 1", (err, rows) => {
+        if (err) console.log(err)
+        if (callback) callback(err, rows)
+    })
+}
+
 function addBeer(beer, callback) {
     db.run(`INSERT INTO Beers 
         (name, price, degre, volume, image, isAvailable) 
@@ -189,7 +196,7 @@ function getPurchases(callback) {
 function buy(userId, beerId, number, callback) {
     db.run(
         `INSERT INTO Shopping 
-        (pseudo, beerId, date, number) 
+        (userId, beerId, date, number) 
         values (?,?,?,?)`,
         [userId, beerId, Math.floor(Date.now()/1000), number],
         (err) => {
@@ -223,6 +230,7 @@ module.exports.users = {
 
 module.exports.beers = {
     getBeers: getBeers,
+    getAvailableBeers : getAvailableBeers,
     addBeer: addBeer,
     updateBeer: updateBeer,
     removeBeer: removeBeer

@@ -38,7 +38,7 @@
                 width="20vw"
                 sortable
                 :searchable="!searchEnable">
-                <router-link :to="'/shop/' + props.row.id">
+                <router-link :to="'/shop/' + formatUserInfo(props.row)">
                     <span class="rowName">
                         {{ props.row.pseudo }}
                     </span>
@@ -80,11 +80,6 @@ function randInt() {
 export default {
     data() {
         const users = [
-            { 'id': 1, 'name': 'Meas', 'croix': randInt(), 'ronds': randInt(), 'gender': 'Male' },
-            { 'id': 2, 'name': 'Jupiler', 'croix': randInt(), 'ronds': randInt(), 'gender': 'Male' },
-            { 'id': 3, 'name': 'Carapils', 'croix': randInt(), 'ronds': randInt(), 'gender': 'Female' },
-            { 'id': 4, 'name': 'Chimay bleu', 'croix': randInt(), 'ronds': randInt(), 'gender': 'Male' },
-            { 'id': 5, 'name': 'Cuvé des trolls', 'croix': randInt(), 'ronds': randInt(), 'gender': 'Female' }
         ]
         return {
             brrr : '',
@@ -107,6 +102,12 @@ export default {
         }
     },
     methods: {
+        formatUserInfo(user) {
+            return JSON.stringify({
+                userId : user.id,
+                rondLeft : user.rond - user.croix
+            })
+        },
         resetSort(){
             this.tableModified = false;
             this.selected = undefined;

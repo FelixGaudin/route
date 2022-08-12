@@ -39,13 +39,31 @@ export default {
     name: String,
     price: Number,
     degre : Number,
-    image : String,
-    userId : Number
+    image : String
+  },
+  data() {
+    return {
+        userId : undefined,
+        rondLeft : undefined
+    }
   },
   methods : {
-      buyBeer(quantity) {
-        console.log(this.$route.params.userId);
-        this.$buefy.dialog.confirm({
+    displayNotEnoughMoneyMessage(missingMoney) {
+        this.$buefy.dialog.alert({
+            title: 'Pas assez de ronds',
+            message: `Il vous manque ${missingMoney} ronds pour pouvoir acheter`,
+            type: 'is-danger',
+            hasIcon: true,
+            icon: 'times-circle',
+            iconPack: 'fa',
+            ariaRole: 'alertdialog',
+            ariaModal: true
+        })
+    },
+    buyBeer(quantity) {
+        if (this.rondLeft < this.price*quantity)  
+            this.displayNotEnoughMoneyMessage(this.price*quantity-this.rondLeft)
+        else this.$buefy.dialog.confirm({
             title: 'Veuillez confirmer',
             message: `Êtes vous sûr de vouloir achter ${quantity} ${this.name} ?
             <br>
@@ -72,8 +90,7 @@ export default {
                         this.$router.go(-1)
                     }
                 })
-                ipcRenderer.send("buy", this.$route.params.userId, this.beerId, quantity);
-
+                ipcRenderer.send("buy", this.userId, this.beerId, quantity);
             }
         })
       },
@@ -92,6 +109,11 @@ export default {
                 onConfirm: (value) => this.buyBeer(value)
             })
         },
+  },
+  beforeMount() {
+    let o = JSON.parse(this.$route.params.infos)
+    this.userId = o.userId;
+    this.rondLeft = o.rondLeft;
   }
 }
 </script>

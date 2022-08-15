@@ -5,7 +5,7 @@
                 label="Disponible ?"
                 field="delete"
                 v-slot="props"
-                width="6vw">
+                width="3vw">
                 <b-field>
                     <b-switch 
                         v-model="props.row.isAvailable"
@@ -76,9 +76,21 @@
             </b-table-column>
             <b-table-column
                 label=""
+                field="image"
+                v-slot="props"
+                width="3vw">
+                <b-field>
+                    <b-button
+                        icon-right="image-edit" 
+                        @click="() => {launchImageEdit(props.row)}"
+                        />
+                </b-field>
+            </b-table-column>
+            <b-table-column
+                label=""
                 field="delete"
                 v-slot="props"
-                width="6vw">
+                width="3vw">
                 <b-field>
                     <b-button type="is-danger"
                         icon-right="delete" 
@@ -93,12 +105,58 @@
         <b-button @click="addBeer" size="is-medium">Ajouter une bière</b-button>
         <b-button @click="apply" size="is-medium" type="is-success">Valider</b-button>
         <b-button @click="clear" size="is-medium" type="is-warning">Annuler</b-button>
+
+        <b-modal v-model="selectedBeer" :width="640" scroll="keep">
+            <div class="card">
+                <div class="card-image">
+                    <figure class="image is-4by3">
+                        <img 
+                            v-if="selectedImage" 
+                            :src="selectedImage" 
+                            alt="Error displaying image">
+                        <img v-else src="https://bulma.io/images/placeholders/1280x960.png" alt="Image">
+                    </figure>
+                </div>
+                <div class="card-content">
+                    <div class="media">
+                        <div class="media-content">
+                            <p class="title is-4">Changer l'image de la bière</p>
+                        </div>
+                    </div>
+
+                    <div class="content">
+                        <b-field>
+                            <b-upload 
+                                @input="handleImage"
+                                v-model="dropFile"
+                                drag-drop
+                                >
+                                <section class="section">
+                                    <div class="content has-text-centered">
+                                        <p>
+                                            <b-icon
+                                                icon="upload"
+                                                size="is-large">
+                                            </b-icon>
+                                        </p>
+                                        <p>Clique pour changer l'image</p>
+                                    </div>
+                                </section>
+                            </b-upload>
+                        </b-field>
+                        <b-button @click="applyImage" size="is-medium" type="is-success">Valider</b-button>
+                        <b-button @click="cancelImage" size="is-medium" type="is-warning">Annuler</b-button>
+                    </div>
+                </div>
+            </div>
+        </b-modal>
     </div>
 </template>
 
 <script>
 
 const {ipcRenderer} = window.require("electron")
+const base64Img = window.require("base64-img")
 
 export default {
     name: 'BeerCard',
@@ -106,10 +164,10 @@ export default {
         return {
             beerHashes : {},
             displayedBeers : [],
-            beers : [
-                {id:0, name:"Jupiler", price:2, degre:5.2, volume:0.25, image:'', isAvailable: true},
-                {id:1, name:"Maes", price:2, degre:5.2, volume:0.25, image:'', isAvailable: true},
-            ]
+            beers : [],
+            selectedBeer : null,
+            dropFile : null,
+            selectedImage : null
         }
     },
     methods : {
@@ -121,6 +179,10 @@ export default {
                     .toLowerCase()
                     .localeCompare(name.toLowerCase()) == 0
             }).length === 1;
+        },
+        launchImageEdit(beer) {
+            this.selectedBeer = beer;
+            this.selectedImage = beer.image;
         },
         deleteBeer(beerId) {
             this.$buefy.dialog.confirm({
@@ -226,6 +288,24 @@ export default {
             this.displayedBeers = this.beers
                 // https://stackoverflow.com/questions/597588/how-do-you-clone-an-array-of-objects-in-javascript
                 .map(a => {return {...a}})
+        },
+        handleImage(file) {
+            console.log("COUCOU");
+            console.log(file);
+            base64Img.base64(file.path, (err, data) => {
+                if (err) console.log(err);
+                else {
+                    this.selectedImage = data;
+                }
+            })
+        },
+        applyImage() {
+            this.selectedBeer.image = this.selectedImage;
+            this.cancelImage();
+        },
+        cancelImage() {
+            this.selectedBeer = null;
+            this.selectedImage = null;
         },
         updateList() {
             ipcRenderer.once('getBeersReply', (event, resp) => {

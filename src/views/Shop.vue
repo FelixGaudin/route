@@ -1,9 +1,14 @@
 <template>
     <div class="shop">
-        <span>User = {{ $route.params.rondLeft }}</span>
         <div class="beerList">
             <div v-for="beer in beers" :key="beer.name">
-                <BeerCard :name="beer.name" :price="beer.price" :degre="beer.degre" :beerId="beer.id"/>
+                <BeerCard 
+                    :name="beer.name" 
+                    :price="beer.price" 
+                    :degre="beer.degre" 
+                    :beerId="beer.id" 
+                    :image="beer.image"
+                    />
             </div>
         </div>
     </div>
@@ -29,7 +34,6 @@ export default {
   },
   beforeMount() {
     ipcRenderer.once("getAvailableBeersReply", (event, resp) => {
-        console.log("OK");
         if (resp.error) {
             this.$buefy.dialog.alert({
                 title: 'ERREUR',
@@ -42,7 +46,6 @@ export default {
                 ariaModal: true
             })
         } else {
-            console.log(resp.data);
             this.beers = resp.data
         }
     });

@@ -2,7 +2,8 @@
     <div class="card beer">
         <div class="card-image">
             <figure class="image is-4by3">
-            <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image">
+            <img v-if="image.length !== 0" :src="image" alt="Error with the image">
+            <img v-else src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image">
             </figure>
         </div>
         <div class="card-content">

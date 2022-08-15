@@ -1,18 +1,23 @@
 <template>
     <div class="content">
         <!-- <ExAlignments/> TODO:fix this-->
-        <div>
-            <b-button class="menu-button" size="is-large" @click="() => {setMenu('addRonds')}">Ajouter des croix</b-button>
-            <b-button class="menu-button" size="is-large" @click="() => {setMenu('editBeer')}">Modifier les bières</b-button>
-            <b-button class="menu-button" size="is-large" @click="() => {setMenu('stats')}"   >Statistiques</b-button>
-            <b-button class="menu-button" size="is-large" @click="() => {setMenu('addUser')}" >Nouvel alcoolique</b-button>
-            <b-button class="menu-button" size="is-large" @click="() => {setMenu('editUser')}">Modifier les alcooliques</b-button>
-        </div>
-        <AddRonds v-if="currentSelected == 'addRonds'"/>
-        <AddUser  v-if="currentSelected == 'addUser'" />
-        <EditBeer v-if="currentSelected == 'editBeer'"/>
-        <EditUser v-if="currentSelected == 'editUser'"/>
-        <Stats    v-if="currentSelected == 'stats'"   />
+            <b-tabs v-model="activeTab" position="is-centered">
+              <b-tab-item label="Ajouter des ronds">
+                <AddRonds/>
+              </b-tab-item>
+              <b-tab-item label="Modifier les bières">
+                <EditBeer/>
+              </b-tab-item>
+              <b-tab-item label="Statistiques">
+                <Stats/>
+              </b-tab-item>
+              <b-tab-item label="Nouvel alcoolique">
+                <AddUser/>
+              </b-tab-item>
+              <b-tab-item label="Modifier les alcooliques">
+                  <EditUser/>
+              </b-tab-item>
+            </b-tabs>
     </div>
 </template>
 
@@ -35,14 +40,8 @@ export default {
   },
   data() {
     return {
-        currentSelected : undefined
+        activeTab : 0,
     };
-  },
-  methods : {
-      setMenu(selected) {
-          if (selected == this.currentSelected) this.currentSelected = undefined
-          else this.currentSelected = selected
-      }
   }
 };
 </script>

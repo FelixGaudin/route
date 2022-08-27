@@ -52,10 +52,4 @@ export default {
   align-self: center;
   width:fit-content
 }
-.fixed-width {
-    width: 400px;    
-}
-.menu-button {
-    margin: 20px;
-}
 </style>

@@ -22,9 +22,54 @@
             </div>
         </div>
           <footer class="card-footer">
-            <b-button class="card-footer-item" type="is-info is-inverted" @click="() => {buyBeer(1)}">Acheter 1</b-button>
-            <b-button class="card-footer-item" type="is-info is-inverted" @click="() => {buyBeer(2)}">Acheter 2</b-button>
-            <b-button class="card-footer-item" type="is-info is-inverted" @click="setQuantity">Acheter +</b-button>
+            <!-- 1 -->
+            <b-button 
+                v-if="rondLeft >= price"
+                class="card-footer-item" 
+                type="is-info is-inverted" 
+                @click="() => {buyBeer(1)}">
+                Acheter 1
+            </b-button>
+            <b-button 
+                v-else
+                disabled
+                class="card-footer-item" 
+                type="is-info is-inverted" 
+                @click="() => {buyBeer(1)}">
+                Acheter 1
+            </b-button>
+            <!-- 2 -->
+            <b-button 
+                v-if="rondLeft >= 2*price"
+                class="card-footer-item"
+                type="is-info is-inverted" 
+                @click="() => {buyBeer(2)}">
+                Acheter 2
+            </b-button>
+            <b-button 
+                v-else
+                disabled
+                class="card-footer-item"
+                type="is-info is-inverted" 
+                @click="() => {buyBeer(2)}">
+                Acheter 2
+            </b-button>
+            <!-- 3 -->
+            <b-button 
+                v-if="rondLeft >= 3*price"
+                class="card-footer-item" 
+                type="is-info is-inverted" 
+                @click="setQuantity">
+                Acheter +
+            </b-button>
+            <b-button 
+                v-else
+                disabled
+                class="card-footer-item" 
+                type="is-info is-inverted" 
+                @click="setQuantity">
+                Acheter +
+            </b-button>
         </footer>
     </div>
 </template>
@@ -45,7 +90,8 @@ export default {
   data() {
     return {
         userId : undefined,
-        rondLeft : undefined
+        rondLeft : undefined,
+        isActive : false
     }
   },
   methods : {
@@ -103,7 +149,7 @@ export default {
                     placeholder: 'Entrez le nombre',
                     value:  '3',
                     min: 1,
-                    max: 69
+                    max: Math.floor(this.rondLeft/this.price)
                 },
                 type: 'is-success',
                 trapFocus: true,

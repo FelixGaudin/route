@@ -63,7 +63,7 @@
                 label="Gender" 
                 v-slot="props">
                 <b-icon pack="fas"
-                    :icon="props.row.gender === 'Male' ? 'mars' : 'venus'">
+                    :icon="props.row.sex === 'm' ? 'mars' : 'venus'">
                 </b-icon>
             </b-table-column>
         </b-table>
@@ -121,7 +121,7 @@ export default {
         }
     },
     beforeMount() {
-        this.brrr = this.$test
+        // this.brrr = this.$test
         ipcRenderer.on('getUsersReply', (event, resp) => {
             if (resp.error) {
                 this.$buefy.dialog.alert({

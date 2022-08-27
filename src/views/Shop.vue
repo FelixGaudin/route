@@ -27,12 +27,14 @@ export default {
   },
   data() {
       return {
+        rondLeft : 0,
         beers : [],
       }
   },
   methods : {
   },
   beforeMount() {
+    this.rondLeft = JSON.parse(this.$route.params.infos).rondLeft;
     ipcRenderer.once("getAvailableBeersReply", (event, resp) => {
         if (resp.error) {
             this.$buefy.dialog.alert({
@@ -46,7 +48,7 @@ export default {
                 ariaModal: true
             })
         } else {
-            this.beers = resp.data
+            this.beers = resp.data.filter(b => this.rondLeft >= b.price);
         }
     });
     ipcRenderer.send("getAvailableBeers");

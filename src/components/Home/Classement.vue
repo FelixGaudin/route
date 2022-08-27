@@ -17,7 +17,7 @@
             </b-checkbox-button>
         </div>
         <b-table 
-            :data="users"
+            :data="showedUsers"
             ref="classementTable"
             @sort="sortPressed"
         >
@@ -38,7 +38,9 @@
                 width="20vw"
                 sortable
                 :searchable="!searchEnable">
-                <router-link :to="'/shop/' + formatUserInfo(props.row)">
+                <router-link 
+                    :is="canGoToShop?'router-link':'span'"
+                    :to="'/shop/' + formatUserInfo(props.row)">
                     <span class="rowName">
                         {{ props.row.pseudo }}
                     </span>
@@ -67,7 +69,6 @@
                 </b-icon>
             </b-table-column>
         </b-table>
-        <b-button @click="clickMe">Click Me</b-button>
     </section>
 </template>
 <script>
@@ -75,11 +76,13 @@ const {ipcRenderer} = window.require("electron")
 
 export default {
     data() {
-        const users = [
-        ]
+        // const showedUsers = []
         return {
             brrr : '',
-            users,
+            canGoToShop : true,
+            showedUsers: [],
+            users : [],
+            staffStats : undefined,
             columnsTemplate: [
                 { 
                     title: 'Croix', 
@@ -105,7 +108,9 @@ export default {
             })
         },
         resetSort(){
+            this.showedUsers = this.users
             this.tableModified = false;
+            this.canGoToShop = true;
             this.selected = undefined;
             this.$refs.classementTable.resetMultiSorting()
         },
@@ -114,10 +119,48 @@ export default {
         },
         onChange(event) {
             this.tableModified = true;
-            console.log(event);
-        },
-        clickMe() {
-            console.log(this.searchEnable);
+            switch (event) {
+                case "Homme":
+                    this.canGoToShop = true;
+                    this.showedUsers = this.users.filter(u => u.sex == "m");
+                    break;
+            
+                case "Femme":
+                    this.canGoToShop = true;
+                    this.showedUsers = this.users.filter(u => u.sex == "f");
+                    break;
+
+                case "Staff":
+                    if (!this.staffStats) {
+                        // if not set compute it (just once)
+                        let scores = {}
+                        this.users.forEach(u => {
+                            if (!(u.staff in scores)) {
+                                scores[u.staff] = {
+                                    croix : 0,
+                                    rond : 0
+                                }
+                                scores[u.staff].croix += u.croix
+                                scores[u.staff].rond += u.rond
+                            }
+                        })
+                        console.log(scores);
+                        this.staffStats = Object.keys(scores)
+                            .sort((a, b) => scores[a].croix - scores[b].croix)
+                            .map((k, i) => {return {
+                                id : i+1,
+                                pseudo : k,
+                                croix : scores[k].croix,
+                                rond : scores[k].rond
+                            }})
+                    }
+                    this.showedUsers = this.staffStats
+                    this.canGoToShop = false;
+                    break;
+
+                default:
+                    this.showedUsers = this.users;
+            }
         }
     },
     beforeMount() {
@@ -135,7 +178,8 @@ export default {
                     ariaModal: true
                 })
             } else {
-                this.users = resp.data;
+                this.users = resp.data.sort((a, b) => a.croix - b.croix);
+                this.showedUsers = this.users;
             }
         })
         ipcRenderer.send('getUsers')

@@ -9,12 +9,13 @@
                     <option value="Staff">Staff</option>
                     <option value="Homme">Homme</option>
                     <option value="Femme">Femme</option>
+                    <option value="Autre">Autre</option>
                 </b-select>
             </b-field> 
-            <b-button v-if="tableModified" type="is-warning is-light" class="button" @click="resetSort">Reset</b-button>
-            <b-checkbox-button v-model="searchEnable">
+            <!-- <b-button v-if="tableModified" type="is-warning is-light" class="button" @click="resetSort">Reset</b-button> -->
+            <!-- <b-checkbox-button v-model="searchEnable">
                 Activer la recherche
-            </b-checkbox-button>
+            </b-checkbox-button> -->
         </div>
         <b-table 
             :data="showedUsers"
@@ -24,10 +25,9 @@
             <b-table-column
                 label="N°"
                 v-slot="props"
-                field="id"
-                sortable>
+                field="showedId">
                 <div class="centered">
-                    {{ props.row.id }}
+                    {{ props.row.showedId }}
                 </div>
             </b-table-column>
 
@@ -35,43 +35,45 @@
                 label="Nom"
                 v-slot="props"
                 field="name"
-                width="20vw"
-                sortable
-                :searchable="!searchEnable">
+                width="20vw">
                 <router-link 
                     :is="canGoToShop?'router-link':'span'"
                     :to="'/shop/' + formatUserInfo(props.row)">
                     <span class="rowName">
-                        {{ props.row.pseudo }}
+                        <strong>{{ props.row.pseudo }}</strong>
                     </span>
                 </router-link>
                 
             </b-table-column>
 
-            <b-table-column v-for="(column, index) in columnsTemplate"
-                :key="index"
-                :label="column.title"
-                :field="column.field"
-                :visible="column.visible"
-                :searchable="!searchEnable"
-                width="10vw"
-                sortable
-                numeric
-                v-slot="props">
-                    {{ props.row[column.field] }}
+            <b-table-column
+                label="Croixs"
+                v-slot="props"
+                field="croix"
+                width="10vw">
+                {{ props.row.croix }}
             </b-table-column>
 
-            <b-table-column 
-                label="Gender" 
-                v-slot="props">
-                <b-icon pack="fas"
-                    :icon="props.row.sex === 'm' ? 'mars' : 'venus'">
-                </b-icon>
+            <b-table-column
+                label="Positif"
+                v-slot="props"
+                field="balance"
+                width="10vw">
+                {{ props.row.rond - props.row.croix }}
+            </b-table-column>
+
+            <b-table-column
+                label="Degre d'alcool"
+                field="alcool"
+                width="8vw"
+            >
+                Pas assez
             </b-table-column>
         </b-table>
     </section>
 </template>
 <script>
+
 const {ipcRenderer} = window.require("electron")
 
 export default {
@@ -91,7 +93,7 @@ export default {
                 },
                 { 
                     title: 'Positif', 
-                    field: 'rond',
+                    field: 'balance',
                     visible: true 
                 }
             ],
@@ -107,18 +109,8 @@ export default {
                 rondLeft : user.rond - user.croix
             })
         },
-        resetSort(){
-            this.showedUsers = this.users
-            this.tableModified = false;
-            this.canGoToShop = true;
-            this.selected = undefined;
-            this.$refs.classementTable.resetMultiSorting()
-        },
-        sortPressed() {
-            this.tableModified = true;
-        },
         onChange(event) {
-            this.tableModified = true;
+            // this.tableModified = true;
             switch (event) {
                 case "Homme":
                     this.canGoToShop = true;
@@ -128,6 +120,10 @@ export default {
                 case "Femme":
                     this.canGoToShop = true;
                     this.showedUsers = this.users.filter(u => u.sex == "f");
+                    break;
+                case "Autre":
+                    this.canGoToShop = true;
+                    this.showedUsers = this.users.filter(u => u.sex == "o");
                     break;
 
                 case "Staff":
@@ -140,13 +136,12 @@ export default {
                                     croix : 0,
                                     rond : 0
                                 }
-                                scores[u.staff].croix += u.croix
-                                scores[u.staff].rond += u.rond
                             }
+                            scores[u.staff].croix += u.croix
+                            scores[u.staff].rond += u.rond
                         })
-                        console.log(scores);
                         this.staffStats = Object.keys(scores)
-                            .sort((a, b) => scores[a].croix - scores[b].croix)
+                            .sort((a, b) => scores[b].croix - scores[a].croix)
                             .map((k, i) => {return {
                                 id : i+1,
                                 pseudo : k,
@@ -159,6 +154,7 @@ export default {
                     break;
 
                 default:
+                    this.canGoToShop = true;
                     this.showedUsers = this.users;
             }
         }
@@ -178,7 +174,8 @@ export default {
                     ariaModal: true
                 })
             } else {
-                this.users = resp.data.sort((a, b) => a.croix - b.croix);
+                this.users = resp.data.sort((a, b) => b.croix - a.croix);
+                this.users.forEach((u, i) => {u.showedId = i+1})
                 this.showedUsers = this.users;
             }
         })

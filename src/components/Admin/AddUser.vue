@@ -131,7 +131,7 @@ export default {
                 'Broceliande',
                 'Petit Bonheur',
                 'Mowha',
-                'Waigunga',
+                'Waingunga',
                 'Seeonee',
                 'ODC',
                 'Orion',

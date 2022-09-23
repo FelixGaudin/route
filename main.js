@@ -243,7 +243,7 @@ const mainMenuTemplate = [
         submenu: [
             {
                 label: 'Dev Tools',
-                accelerator: 'Ctrl+I',
+                accelerator: 'Ctrl+A+N',
                 click(item, focusedWindow) {
                     focusedWindow.toggleDevTools();
                 }

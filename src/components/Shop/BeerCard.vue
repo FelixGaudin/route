@@ -168,6 +168,6 @@ export default {
 <style scoped>
 .beer {
     margin: 5px;
-    width: 20vw;
+    width: 15vw;
 }
 </style>

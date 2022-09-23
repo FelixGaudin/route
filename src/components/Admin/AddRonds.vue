@@ -16,13 +16,13 @@
         </b-field>
         <div v-if="selected != undefined">
             <br/>
-            <b-field :label="`Nombre de ronds à ajouter (1 rond = ${prixRond.toString()} €)`">
+            <b-field :label="`Nombre d'argent à ajouter ? (en euro)`">
                 <b-numberinput
-                    v-model="number" 
+                    v-model="money" 
                     size="is-medium" 
                     type="is-light"
                     min="0"
-                    step="1"
+                    step="0.1"
                     ></b-numberinput>
             </b-field>
             <br/>
@@ -35,16 +35,12 @@
 
 const {ipcRenderer} = window.require("electron")
 
-// https://stackoverflow.com/questions/3885817/how-do-i-check-that-a-number-is-float-or-integer
-function isInt(n) {
-   return n % 1 === 0;
-}
 export default {
     name : "AddRonds",
     data() {
         return {
             prixRond : 0.7,
-            number : 10,
+            money : 10,
             query : '',
             selected : undefined,
             users : []
@@ -61,13 +57,17 @@ export default {
         }
     },
     methods: {
+        moneyToCroix(money, prix) {return Math.round(money/prix)},
+        moneyToReturn(money, prix) {return (money - prix*this.moneyToCroix(money, prix)).toFixed(2)},
         addRonds() {
-            if (this.number > 0 && isInt(this.number)) {
+            if (this.money > 0) {
+                let number = this.moneyToCroix(this.money, this.prixRond);
+                let toReturn = this.moneyToReturn(this.money, this.prixRond);
                 this.$buefy.dialog.confirm({
                     title: 'Veuillez confirmer',
-                    message: `Êtes vous sûr de vouloir ajouter ${this.number} croix à ${this.selected} ?
+                    message: `Êtes vous sûr de vouloir ajouter ${number} croix à ${this.selected} (${this.money}€) ?
                     <br>
-                    (ça lui coutera ${this.number * this.prixRond} €)`,
+                    (a rendre ${toReturn} €)`,
                     cancelText: 'Non',
                     confirmText: 'Oui',
                     type: 'is-success',
@@ -85,13 +85,13 @@ export default {
                                     ariaModal: true
                                 })
                             } else {
-                                this.$buefy.toast.open(`Les ${this.number} croix on bien été ajouté à ${this.selected}`)
+                                this.$buefy.toast.open(`Les ${number} croix on bien été ajouté à ${this.selected}`)
                                 this.selected = undefined
-                                this.number = 10
+                                this.number = 7
                                 this.query = ''
                             }
                         });
-                        ipcRenderer.send('addRond', this.selected, this.number);
+                        ipcRenderer.send('addRond', this.selected, number);
                     }
                 })
             }

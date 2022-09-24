@@ -57,7 +57,7 @@ export default {
         }
     },
     methods: {
-        moneyToCroix(money, prix) {return Math.round(money/prix)},
+        moneyToCroix(money, prix) {return Math.floor(money/prix)},
         moneyToReturn(money, prix) {return (money - prix*this.moneyToCroix(money, prix)).toFixed(2)},
         addRonds() {
             if (this.money > 0) {

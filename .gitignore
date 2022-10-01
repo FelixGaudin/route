@@ -24,5 +24,6 @@ pnpm-debug.log*
 
 # The DB brrrr
 *.sqlite
+route.sqlite
 
 release-builds

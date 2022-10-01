@@ -105,16 +105,21 @@ export default {
             trapFocus: true,
             closeOnConfirm: false,
             onConfirm: (value, {close}) => {
-                // this.$buefy.toast.open(`Your message is sending...`)
-                // setTimeout(() => {
-                //     this.$buefy.toast.open(`Bievenue !`)
-                //     close()
-                //     this.$router.push('/admin')
-                // }, 1000)
                 if (value == "Jacuzzi") {
                     this.$buefy.toast.open(`Bienvenue !`)
                     close()
                     this.$router.push('/admin')
+                } else {
+                    this.$buefy.dialog.alert({
+                        title: 'ATTENTION',
+                        message: 'Mauvais mot de passe',
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
                 }
             }
         })

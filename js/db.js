@@ -216,6 +216,46 @@ function buy(userId, beerId, number, callback) {
     })
 }
 
+// Utils
+
+function getUserAlcoholLevel(timestamp, tresh, callback) {
+    db.all(`
+        SELECT
+            userId,
+            case when sex = "m" 
+                THEN (SUM(gAlc)*0.8)/(79.1*0.7) 
+                ELSE (SUM(gAlc)*0.8)/(66.7*0.6) 
+            END as alcoholLevel
+        FROM Users, (
+            SELECT userId, beerId, number, degre, volume, number*(degre/100)*(volume*1000) as gAlc
+            FROM Shopping as s, Beers as b
+            WHERE s.beerId = b.id AND date >= ?1 - ?2 and date <= ?1 + ?2
+            )
+        WHERE Users.id = userId
+        GROUP BY userId`,
+        [timestamp, tresh],
+        (err, rows) => {
+            if (err) console.log(err);
+            if (callback) callback(err, rows);
+        })
+}
+
+function getUserExpenses(timestamp, tresh, callback) {
+    db.all(`
+        SELECT userId, SUM(expenses)  as expenses
+        FROM (
+            SELECT userId, number * price as expenses
+            FROM Shopping as s, Beers as b
+            WHERE s.beerId = b.id AND date >= ?1 - ?2 and date <= ?1 + ?2
+        )
+        GROUP BY userId`,
+        [timestamp, tresh],
+        (err, rows) => {
+            if (err) console.log(err);
+            if (callback) callback(err, rows)
+        })
+}
+
 module.exports.users = {
     getUsers   : getUsers,
     getPseudos : getPseudos,
@@ -239,4 +279,9 @@ module.exports.beers = {
 module.exports.shopping = {
     buy: buy,
     getPurchases: getPurchases
+}
+
+module.exports.utils = {
+    getUserAlcoholLevel: getUserAlcoholLevel,
+    getUserExpenses: getUserExpenses
 }

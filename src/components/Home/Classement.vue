@@ -1,11 +1,11 @@
 <template>
     <section>
-        <b-field label="Chercher" v-if="canGoToShop" >
+        <b-field label="Chercher">
             <b-input v-model="query" @input="search()"></b-input>
         </b-field>
         <div class="control is-flex">
             <b-field>
-                <b-select v-model="selected" placeholder="Type de classement" size="is-default" @input="onChange()">
+                <b-select v-model="selected" placeholder="Type de classement" size="is-default" @input="reloadClassement()">
                     <option value="Total">Total</option>
                     <option value="Soirée">Soirée</option>
                     <option value="Staff">Staff</option>
@@ -23,9 +23,9 @@
             <b-table-column
                 label="N°"
                 v-slot="props"
-                field="showedId">
+                field="displayedId">
                 <div class="centered">
-                    {{ props.row.showedId }}
+                    {{ props.row.displayedId }}
                 </div>
             </b-table-column>
 
@@ -57,15 +57,18 @@
                 v-slot="props"
                 field="balance"
                 width="10vw">
-                {{ props.row.rond - props.row.croix }}
+                {{ props.row.balance }}
             </b-table-column>
 
             <b-table-column
-                label="Degre d'alcool"
+                :visible="isAlcoholLevelDisplayed"
+                v-slot="props"
+                label="Degré d'alcool (g/L)"
                 field="alcool"
-                width="8vw"
+                width="10vw"
             >
-                Pas assez
+                <span v-if="props.row.alcoholLevel<0.5">{{ props.row.alcoholLevel.toFixed(2) }}</span>
+                <strong v-else style="color:#f14668"> {{ props.row.alcoholLevel.toFixed(2) }} </strong>
             </b-table-column>
         </b-table>
     </section>
@@ -80,6 +83,7 @@ export default {
         return {
             query : '',
             canGoToShop : true,
+            isAlcoholLevelDisplayed : false,
             displayedUsers: [],
             users : [],
             staffStats : undefined,
@@ -96,7 +100,7 @@ export default {
                 }
             ],
             tableModified : false,
-            selected : undefined,
+            selected : 'Soirée',
             searchEnable : true
         }
     },
@@ -108,7 +112,6 @@ export default {
             })
         },
         search() {
-            console.log(this.query);
             this.query = this.query.trim()
         },
         searchUser(query, user) {
@@ -133,12 +136,19 @@ export default {
         filterBySearch() {
             if (this.query != '')
                 return this.displayedUsers.filter((user) => {
-                    return this.searchUser(this.query, user)
+                    if (this.canGoToShop) return this.searchUser(this.query, user)
+                    else return user.pseudo
+                                    .toString()
+                                    .normalize("NFD")
+                                    .replace(/[\u0300-\u036f]/g, "")
+                                    .toLowerCase()
+                                    .indexOf(this.query) >= 0
                 })
             else return this.displayedUsers
         },
-        onChange() {
+        reloadClassement() {
             this.canGoToShop = true;
+            this.isAlcoholLevelDisplayed = true;
             switch (this.selected) {
                 case "Homme":
                     this.displayedUsers = this.users.filter(u => u.sex == "m");
@@ -159,32 +169,80 @@ export default {
                             if (!(u.staff in scores)) {
                                 scores[u.staff] = {
                                     croix : 0,
-                                    rond : 0
+                                    balance : 0,
                                 }
                             }
                             scores[u.staff].croix += u.croix
-                            scores[u.staff].rond += u.rond
+                            scores[u.staff].balance += u.balance
                         })
                         this.staffStats = Object.keys(scores)
                             .sort((a, b) => scores[b].croix - scores[a].croix)
                             .map((k, i) => {return {
-                                id : i+1,
+                                displayedId : i+1,
                                 pseudo : k,
                                 croix : scores[k].croix,
-                                rond : scores[k].rond
+                                balance : scores[k].balance,
                             }})
                     }
                     this.displayedUsers = this.staffStats
                     this.canGoToShop = false;
+                    this.isAlcoholLevelDisplayed = false;
                     break;
-
+                case "Total":
+                    this.isAlcoholLevelDisplayed = false
+                    this.displayedUsers = this.users
+                    break;
+                case "Soirée":
+                    this.displayedUsers = this.users.map((u) => {
+                        return {
+                            pseudo       : u.pseudo,
+                            name         : u.name,
+                            firstName    : u.firstName,
+                            totem        : u.totem,
+                            quali        : u.quali,
+                            staff        : u.staff,
+                            sex          : u.sex,
+                            birthday     : u.birthday,
+                            croix        : u.expenses,
+                            alcoholLevel : u.alcoholLevel,
+                            balance      : u.balance
+                        }
+                    })
+                    this.displayedUsers.forEach((u, i) => u.displayedId = i+1)
+                    break
                 default:
                     this.displayedUsers = this.users;
             }
+            console.log(this.isAlcoholLevelDisplayed);
+        },
+        loadAlcoholLevel : async function() {
+            ipcRenderer.on('getAlcoholLevelReply', (event, resp) => {
+                if (!resp.error) {
+                    this.users.forEach((u) => {
+                        let tmp = resp.data.find(r => r.userId === u.id);
+                        u.alcoholLevel = 0 
+                        if (tmp) u.alcoholLevel = tmp.alcoholLevel
+                        })
+                    this.reloadClassement()
+                }
+            })
+            ipcRenderer.send('getAlcoholLevel')
+        },
+        loadExpenses: async function() {
+            ipcRenderer.on('getExpensesReply', (event, resp) => {
+                if (!resp.error) {
+                    this.users.forEach((u) => {
+                        let tmp = resp.data.find(r => r.userId === u.id);
+                        u.expenses = 0 
+                        if (tmp) u.expenses = tmp.expenses
+                        })
+                    this.reloadClassement()
+                }
+            })
+            ipcRenderer.send('getExpenses')
         }
     },
     beforeMount() {
-        // this.brrr = this.$test
         ipcRenderer.on('getUsersReply', (event, resp) => {
             if (resp.error) {
                 this.$buefy.dialog.alert({
@@ -199,8 +257,13 @@ export default {
                 })
             } else {
                 this.users = resp.data.sort((a, b) => b.croix - a.croix);
-                this.users.forEach((u, i) => {u.showedId = i+1})
+                this.users.forEach((u, i) => {
+                    u.displayedId = i+1;
+                    u.balance = u.rond - u.croix
+                    })
                 this.displayedUsers = this.users;
+                this.loadAlcoholLevel()
+                this.loadExpenses()
             }
         })
         ipcRenderer.send('getUsers')

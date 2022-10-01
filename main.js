@@ -236,6 +236,20 @@ ipcMain.on('buy', (event, userId, beerId, number) => {
     })
 })
 
+// Utils
+const DELTA = 12*60*60 // 12h
+ipcMain.on('getAlcoholLevel', (event) => {
+    db.utils.getUserAlcoholLevel(new Date()/1000, DELTA, (err, rows) => {
+        event.reply('getAlcoholLevelReply', formatResponse(err, rows))
+    }) 
+})
+
+ipcMain.on('getExpenses', (event) => {
+    db.utils.getUserExpenses(new Date() / 1000, DELTA, (err, rows) => {
+        event.reply('getExpensesReply', formatResponse(err, rows))
+    })
+})
+
 
 const mainMenuTemplate = [
     {

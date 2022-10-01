@@ -1,9 +1,11 @@
 <template>
     <section>
-        {{ brrr }}
+        <b-field label="Chercher" v-if="canGoToShop" >
+            <b-input v-model="query" @input="search()"></b-input>
+        </b-field>
         <div class="control is-flex">
             <b-field>
-                <b-select v-model="selected" placeholder="Type de classement" size="is-default" @input="onChange($event)">
+                <b-select v-model="selected" placeholder="Type de classement" size="is-default" @input="onChange()">
                     <option value="Total">Total</option>
                     <option value="Soirée">Soirée</option>
                     <option value="Staff">Staff</option>
@@ -12,13 +14,9 @@
                     <option value="Autre">Autre</option>
                 </b-select>
             </b-field> 
-            <!-- <b-button v-if="tableModified" type="is-warning is-light" class="button" @click="resetSort">Reset</b-button> -->
-            <!-- <b-checkbox-button v-model="searchEnable">
-                Activer la recherche
-            </b-checkbox-button> -->
         </div>
         <b-table 
-            :data="showedUsers"
+            :data="filterBySearch()"
             ref="classementTable"
             @sort="sortPressed"
         >
@@ -78,11 +76,11 @@ const {ipcRenderer} = window.require("electron")
 
 export default {
     data() {
-        // const showedUsers = []
+        // const displayedUsers = []
         return {
-            brrr : '',
+            query : '',
             canGoToShop : true,
-            showedUsers: [],
+            displayedUsers: [],
             users : [],
             staffStats : undefined,
             columnsTemplate: [
@@ -109,26 +107,53 @@ export default {
                 rondLeft : user.rond - user.croix
             })
         },
-        onChange(event) {
-            // this.tableModified = true;
-            switch (event) {
+        search() {
+            console.log(this.query);
+            this.query = this.query.trim()
+        },
+        searchUser(query, user) {
+            let out = false;
+            [
+                'pseudo',
+                'name',
+                'firstName',
+                'totem',
+                'quali'
+            ].forEach((field) => {
+                let tmp = user[field]
+                    .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .indexOf(query)
+                if (tmp >= 0) out = true;
+            });
+            return out;
+        },
+        filterBySearch() {
+            if (this.query != '')
+                return this.displayedUsers.filter((user) => {
+                    return this.searchUser(this.query, user)
+                })
+            else return this.displayedUsers
+        },
+        onChange() {
+            this.canGoToShop = true;
+            switch (this.selected) {
                 case "Homme":
-                    this.canGoToShop = true;
-                    this.showedUsers = this.users.filter(u => u.sex == "m");
+                    this.displayedUsers = this.users.filter(u => u.sex == "m");
                     break;
             
                 case "Femme":
-                    this.canGoToShop = true;
-                    this.showedUsers = this.users.filter(u => u.sex == "f");
+                    this.displayedUsers = this.users.filter(u => u.sex == "f");
                     break;
                 case "Autre":
-                    this.canGoToShop = true;
-                    this.showedUsers = this.users.filter(u => u.sex == "o");
+                    this.displayedUsers = this.users.filter(u => u.sex == "o");
                     break;
 
                 case "Staff":
                     if (!this.staffStats) {
-                        // if not set compute it (just once)
+                        // compute it just once
                         let scores = {}
                         this.users.forEach(u => {
                             if (!(u.staff in scores)) {
@@ -149,13 +174,12 @@ export default {
                                 rond : scores[k].rond
                             }})
                     }
-                    this.showedUsers = this.staffStats
+                    this.displayedUsers = this.staffStats
                     this.canGoToShop = false;
                     break;
 
                 default:
-                    this.canGoToShop = true;
-                    this.showedUsers = this.users;
+                    this.displayedUsers = this.users;
             }
         }
     },
@@ -176,7 +200,7 @@ export default {
             } else {
                 this.users = resp.data.sort((a, b) => b.croix - a.croix);
                 this.users.forEach((u, i) => {u.showedId = i+1})
-                this.showedUsers = this.users;
+                this.displayedUsers = this.users;
             }
         })
         ipcRenderer.send('getUsers')

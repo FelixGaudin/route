@@ -20,7 +20,7 @@
                 label="Pseudo"
                 v-slot="props"
                 field="pseudo"
-                width="6vw">
+                width="10vw">
                 <b-field
                     :type="isPseudoUnique(props.row.pseudo)? '': 'is-danger'"
                     :message="isPseudoUnique(props.row.pseudo)? '': 'Le pseudo est utilisé plusieurs fois'"
@@ -111,7 +111,7 @@
                 label="Anniversaire"
                 v-slot="props"
                 field="sex"
-                width="12vw">
+                width="10vw">
                 <b-field>
                     <b-datepicker
                         v-model="props.row.birthday"
@@ -303,11 +303,13 @@ export default {
                         ariaModal: true
                     })
                 } else {
-                    this.users = resp.data.map((user) => {
-                        user.birthday = new Date(user.birthday*1000);
-                        this.usersHashes[user.id] = JSON.stringify(user);
-                        return user;
-                    });
+                    this.users = resp.data
+                            .sort((a, b) => a.pseudo.localeCompare(b.pseudo))
+                            .map((user) => {
+                                user.birthday = new Date(user.birthday*1000);
+                                this.usersHashes[user.id] = JSON.stringify(user);
+                                return user;
+                            });
                     this.clear();
                 }
             })

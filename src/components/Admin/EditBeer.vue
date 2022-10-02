@@ -336,7 +336,7 @@ export default {
                         ariaModal: true
                     })
                 } else {
-                    this.beers = resp.data;
+                    this.beers = resp.data.sort((a, b) => a.name.localeCompare(b.name));
                     this.beers.forEach((beer) => {
                         beer.isAvailable = Boolean(beer.isAvailable);
                         this.beerHashes[beer.id] = JSON.stringify(beer);

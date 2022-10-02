@@ -74,8 +74,5 @@ export default {
 @import url('https://cdn.jsdelivr.net/npm/@mdi/font@5.8.55/css/materialdesignicons.min.css');
 @import url('https://use.fontawesome.com/releases/v5.2.0/css/all.css');
 @import '../src/css/bulles.css';
-body::-webkit-scrollbar {
-  display: none;
-}
 </style>
 

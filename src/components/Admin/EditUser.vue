@@ -1,6 +1,9 @@
 <template>
     <div class="centered">
-        <b-table :data="displayedUsers">
+        <b-field label="Chercher">
+            <b-input v-model="query" @input="search()"></b-input>
+        </b-field>
+        <b-table :data="filterBySearch()">
             <b-table-column
                 label=""
                 field="delete"
@@ -138,6 +141,7 @@ export default {
     data() {
         return {
             // list of the "hashes" of the users before being modified
+            query : '',
             usersHashes : {},
             users : [],
             displayedUsers : [],
@@ -159,6 +163,33 @@ export default {
         }
     },
     methods : {
+        search() {this.query = this.query.trim()},
+        searchUser(query, user) {
+            let out = false;
+            [
+                'pseudo',
+                'name',
+                'firstName',
+                'totem',
+                'quali'
+            ].forEach((field) => {
+                let tmp = user[field]
+                    .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .indexOf(query)
+                if (tmp >= 0) out = true;
+            });
+            return out;
+        },
+        filterBySearch() {
+            if (this.query != '')
+                return this.displayedUsers.filter((user) => {
+                    return this.searchUser(this.query, user)
+                    })
+            else return this.displayedUsers
+        },
         isPseudoUnique(pseudo) {
             let v = this.displayedUsers
                 .filter((user) => {

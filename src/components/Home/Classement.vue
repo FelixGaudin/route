@@ -213,7 +213,6 @@ export default {
                 default:
                     this.displayedUsers = this.users;
             }
-            console.log(this.isAlcoholLevelDisplayed);
         },
         loadAlcoholLevel : async function() {
             ipcRenderer.on('getAlcoholLevelReply', (event, resp) => {

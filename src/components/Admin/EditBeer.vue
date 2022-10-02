@@ -1,6 +1,9 @@
 <template>
     <div class="centered">
-        <b-table :data="displayedBeers">
+        <b-field label="Chercher">
+            <b-input v-model="query" @input="search()"></b-input>
+        </b-field>
+        <b-table :data="filterBySearch()">
             <b-table-column
                 label="Disponible ?"
                 field="delete"
@@ -114,7 +117,7 @@
                             v-if="selectedImage" 
                             :src="selectedImage" 
                             alt="Error displaying image">
-                        <img v-else src="https://bulma.io/images/placeholders/1280x960.png" alt="Image">
+                        <img v-else src="@/assets/1280x960.png" alt="Image">
                     </figure>
                 </div>
                 <div class="card-content">
@@ -162,6 +165,7 @@ export default {
     name: 'BeerCard',
     data() {
         return {
+            query : '',
             beerHashes : {},
             displayedBeers : [],
             beers : [],
@@ -171,6 +175,19 @@ export default {
         }
     },
     methods : {
+        search() {this.query = this.query.trim()},
+        filterBySearch() {
+            if (this.query != '')
+                return this.displayedBeers.filter((beer) => {
+                    return beer.name
+                            .toString()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                            .toLowerCase()
+                            .indexOf(this.query) >= 0
+                    })
+            else return this.displayedBeers
+        },
         isBeerNameUnique(name) {
             return this.displayedBeers
                 .filter((beer) => {
@@ -290,8 +307,6 @@ export default {
                 .map(a => {return {...a}})
         },
         handleImage(file) {
-            console.log("COUCOU");
-            console.log(file);
             base64Img.base64(file.path, (err, data) => {
                 if (err) console.log(err);
                 else {
@@ -326,6 +341,7 @@ export default {
                         beer.isAvailable = Boolean(beer.isAvailable);
                         this.beerHashes[beer.id] = JSON.stringify(beer);
                         })
+                    
                     this.clear();
                 }
             })

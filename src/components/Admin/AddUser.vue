@@ -148,8 +148,15 @@ export default {
             let v = this.usedPseudos.filter((option) => {
                 return option
                     .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .localeCompare(this.formInputs.pseudo.toLowerCase()) == 0
+                    .localeCompare(
+                        this.formInputs.pseudo
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        ) == 0
             }).length;
             return v === 0;
         },

@@ -6,3 +6,5 @@
 - [x] Get only consumption from current party (12h ago ?)
 - [ ] Games
 - [ ] https://stackoverflow.com/questions/40418693sqlite-how-to-escape-values-to-prevent-sql-injection
+- [x] Gérer les accents
+- [x] recherche sur les bières

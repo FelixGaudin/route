@@ -51,8 +51,15 @@ export default {
             return this.users.filter((option) => {
                 return option
                     .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .indexOf(this.query.toLowerCase()) >= 0
+                    .indexOf(
+                        this.query
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        ) >= 0
             })
         }
     },

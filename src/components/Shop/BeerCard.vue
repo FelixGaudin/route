@@ -9,7 +9,7 @@
         <div class="card-content">
             <div class="media">
                 <div class="media-content">
-                    <p class="title is-4">{{ name }}</p>
+                    <p class="title is-6">{{ name }}</p>
                 </div>
                 <div class="media-right">
                     {{ degre }}°
@@ -22,54 +22,27 @@
             </div>
         </div>
           <footer class="card-footer">
-            <!-- 1 -->
-            <b-button 
-                v-if="rondLeft >= price"
+            <a 
+                v-if="balance >= price"
                 class="card-footer-item" 
                 type="is-info is-inverted" 
                 @click="() => {buyBeer(1)}">
-                Acheter 1
-            </b-button>
-            <b-button 
-                v-else
-                disabled
-                class="card-footer-item" 
-                type="is-info is-inverted" 
-                @click="() => {buyBeer(1)}">
-                Acheter 1
-            </b-button>
-            <!-- 2 -->
-            <b-button 
-                v-if="rondLeft >= 2*price"
+                1
+            </a>
+            <a 
+                v-if="balance >= 2*price"
                 class="card-footer-item"
                 type="is-info is-inverted" 
                 @click="() => {buyBeer(2)}">
-                Acheter 2
-            </b-button>
-            <b-button 
-                v-else
-                disabled
-                class="card-footer-item"
-                type="is-info is-inverted" 
-                @click="() => {buyBeer(2)}">
-                Acheter 2
-            </b-button>
-            <!-- 3 -->
-            <b-button 
-                v-if="rondLeft >= 3*price"
+                2
+            </a>
+            <a 
+                v-if="balance >= 3*price"
                 class="card-footer-item" 
                 type="is-info is-inverted" 
                 @click="setQuantity">
-                Acheter +
-            </b-button>
-            <b-button 
-                v-else
-                disabled
-                class="card-footer-item" 
-                type="is-info is-inverted" 
-                @click="setQuantity">
-                Acheter +
-            </b-button>
+                +
+            </a>
         </footer>
     </div>
 </template>
@@ -90,7 +63,7 @@ export default {
   data() {
     return {
         userId : undefined,
-        rondLeft : undefined,
+        balance : undefined,
         isActive : false
     }
   },
@@ -108,8 +81,8 @@ export default {
         })
     },
     buyBeer(quantity) {
-        if (this.rondLeft < this.price*quantity)  
-            this.displayNotEnoughMoneyMessage(this.price*quantity-this.rondLeft)
+        if (this.balance < this.price*quantity)  
+            this.displayNotEnoughMoneyMessage(this.price*quantity-this.balance)
         else this.$buefy.dialog.confirm({
             title: 'Veuillez confirmer',
             message: `Êtes vous sûr de vouloir achter ${quantity} ${this.name} ?
@@ -149,7 +122,7 @@ export default {
                     placeholder: 'Entrez le nombre',
                     value:  '3',
                     min: 1,
-                    max: Math.floor(this.rondLeft/this.price)
+                    max: Math.floor(this.balance/this.price)
                 },
                 type: 'is-success',
                 trapFocus: true,
@@ -159,15 +132,20 @@ export default {
   },
   beforeMount() {
     let o = JSON.parse(this.$route.params.infos)
+    // console.log(o);
     this.userId = o.userId;
-    this.rondLeft = o.rondLeft;
+    this.balance = o.balance;
   }
 }
 </script>
 
 <style scoped>
 .beer {
-    margin: 5px;
     width: 15vw;
+    margin: 5px;
+}
+
+a:visited {
+    color: blue;
 }
 </style>

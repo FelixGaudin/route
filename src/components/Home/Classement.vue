@@ -106,9 +106,10 @@ export default {
     },
     methods: {
         formatUserInfo(user) {
+            console.log(user);
             return JSON.stringify({
                 userId : user.id,
-                rondLeft : user.rond - user.croix
+                balance : user.balance
             })
         },
         search() {
@@ -128,7 +129,12 @@ export default {
                     .normalize("NFD")
                     .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .indexOf(query)
+                    .indexOf(
+                        query
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        )
                 if (tmp >= 0) out = true;
             });
             return out;
@@ -142,7 +148,12 @@ export default {
                                     .normalize("NFD")
                                     .replace(/[\u0300-\u036f]/g, "")
                                     .toLowerCase()
-                                    .indexOf(this.query) >= 0
+                                    .indexOf(
+                                        this.query
+                                            .toLowerCase()
+                                            .normalize("NFD")
+                                            .replace(/[\u0300-\u036f]/g, "")
+                                        ) >= 0
                 })
             else return this.displayedUsers
         },
@@ -195,6 +206,7 @@ export default {
                 case "Soirée":
                     this.displayedUsers = this.users.map((u) => {
                         return {
+                            id           : u.id,
                             pseudo       : u.pseudo,
                             name         : u.name,
                             firstName    : u.firstName,
@@ -207,7 +219,7 @@ export default {
                             alcoholLevel : u.alcoholLevel,
                             balance      : u.balance
                         }
-                    })
+                    }).sort((a, b) => b.croix - a.croix)
                     this.displayedUsers.forEach((u, i) => u.displayedId = i+1)
                     break
                 default:

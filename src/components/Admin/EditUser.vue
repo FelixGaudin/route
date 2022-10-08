@@ -178,7 +178,12 @@ export default {
                     .normalize("NFD")
                     .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .indexOf(query)
+                    .indexOf(
+                        query
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        )
                 if (tmp >= 0) out = true;
             });
             return out;
@@ -195,8 +200,15 @@ export default {
                 .filter((user) => {
                 return user.pseudo
                     .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .localeCompare(pseudo.toLowerCase()) == 0
+                    .localeCompare(
+                        pseudo
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        ) == 0
             }).length;
             return v === 1;
         },

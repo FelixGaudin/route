@@ -184,7 +184,12 @@ export default {
                             .normalize("NFD")
                             .replace(/[\u0300-\u036f]/g, "")
                             .toLowerCase()
-                            .indexOf(this.query) >= 0
+                            .indexOf(
+                                this.query
+                                    .toLowerCase()
+                                    .normalize("NFD")
+                                    .replace(/[\u0300-\u036f]/g, "")
+                                ) >= 0
                     })
             else return this.displayedBeers
         },
@@ -193,8 +198,15 @@ export default {
                 .filter((beer) => {
                 return beer.name
                     .toString()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .localeCompare(name.toLowerCase()) == 0
+                    .localeCompare(
+                        name
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                        ) == 0
             }).length === 1;
         },
         launchImageEdit(beer) {

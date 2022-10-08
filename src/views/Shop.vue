@@ -1,7 +1,12 @@
 <template>
     <div class="shop">
+        <div class="search">
+            <b-field label="Chercher">
+                <b-input v-model="query" @input="search()"></b-input>
+            </b-field>
+        </div>
         <div class="beerList">
-            <div v-for="beer in beers" :key="beer.name">
+            <div v-for="beer in filterBySearch()" :key="beer.name">
                 <BeerCard 
                     :name="beer.name" 
                     :price="beer.price" 
@@ -27,14 +32,33 @@ export default {
   },
   data() {
       return {
-        rondLeft : 0,
+        balance : 0,
         beers : [],
+        query : ''
       }
   },
   methods : {
+    search() {this.query = this.query.trim()},
+    filterBySearch() {
+            if (this.query != '')
+                return this.beers.filter((beer) => {
+                    return beer.name
+                            .toString()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                            .toLowerCase()
+                            .indexOf(
+                                this.query
+                                    .toLowerCase()
+                                    .normalize("NFD")
+                                    .replace(/[\u0300-\u036f]/g, "")
+                                ) >= 0
+                    })
+            else return this.beers
+        },
   },
   beforeMount() {
-    this.rondLeft = JSON.parse(this.$route.params.infos).rondLeft;
+    this.balance = JSON.parse(this.$route.params.infos).balance;
     ipcRenderer.once("getAvailableBeersReply", (event, resp) => {
         if (resp.error) {
             this.$buefy.dialog.alert({
@@ -48,7 +72,7 @@ export default {
                 ariaModal: true
             })
         } else {
-            this.beers = resp.data.filter(b => this.rondLeft >= b.price);
+            this.beers = resp.data.filter(b => this.balance >= b.price);
         }
     });
     ipcRenderer.send("getAvailableBeers");
@@ -71,5 +95,10 @@ export default {
     width: 300px;
     /* min-width: 100px; */
     /* max-height: 25vw; */
+}
+
+.search {
+    width: 50vw;
+    margin: auto;
 }
 </style>

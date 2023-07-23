@@ -1,10 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-// import VueIPC from 'vue_ipc';
-// import db from './js/db.js'
-// Vue.use(VueIPC);
-
+import axios from 'axios'
 
 
 Vue.config.productionTip = false
@@ -14,10 +11,10 @@ import 'buefy/dist/buefy.css'
 
 Vue.use(Buefy)
 
-// Vue.prototype.$db = db
-
 Vue.prototype.$test = 'Brrr la mif'
-// Vue.prototype.$db = db
+Vue.prototype.$axios = axios
+Vue.prototype.$backend = "http://localhost:6969"
+Vue.prototype.$tresh = 12 * 60 * 60
 
 new Vue({
   router,

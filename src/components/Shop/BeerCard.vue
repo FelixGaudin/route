@@ -48,9 +48,6 @@
 </template>
 
 <script>
-
-const {ipcRenderer} = window.require("electron")
-
 export default {
   name: 'BeerCard',
   props: {
@@ -92,8 +89,18 @@ export default {
             confirmText: 'Oui',
             type: 'is-success',
             onConfirm: () => {
-                ipcRenderer.once("buyReply", (event, resp) => {
-                    if (resp.error) {
+                this.$axios.post(this.$backend + '/shop/buy', {
+                    data : {
+                        userId : this.userId, 
+                        beerId : this.beerId, 
+                        number : quantity
+                    }
+                })
+                    .then(() => {
+                        this.$buefy.toast.open(`Vous avez bien acheté ${quantity} ${this.name} (${quantity*this.price} croix)`)
+                        this.$router.go(-1)
+                    })
+                    .catch(() => {
                         this.$buefy.dialog.alert({
                             title: 'ERREUR',
                             message: "Il y a eu une erreur pour acherter le(s) bière(s), merci de contacter un routier",
@@ -104,13 +111,8 @@ export default {
                             ariaRole: 'alertdialog',
                             ariaModal: true
                         })
-
-                    } else {
-                        this.$buefy.toast.open(`Vous avez bien acheté ${quantity} ${this.name} (${quantity*this.price} croix)`)
-                        this.$router.go(-1)
-                    }
-                })
-                ipcRenderer.send("buy", this.userId, this.beerId, quantity);
+                        
+                    })
             }
         })
       },

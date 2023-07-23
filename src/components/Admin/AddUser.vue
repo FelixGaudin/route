@@ -108,9 +108,6 @@
 </template>
 
 <script>
-
-const {ipcRenderer} = window.require("electron")
-
 export default {
     name: 'AddUser',
     data() {
@@ -172,6 +169,19 @@ export default {
             // Name, Firstname, Totem & quali BALEK
         },
         submit() {
+            if (!this.isPseudoUnique()) {
+                this.$buefy.dialog.alert({
+                    title: 'ERREUR',
+                    message: 'Le pseudo est déjà utilisé',
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                })
+                return
+            }
             let birthday = this.formInputs['birthday']
             // Correct timezone
             let timezoneOffset = birthday.getTimezoneOffset()*60;
@@ -186,26 +196,10 @@ export default {
                 sex       : this.formInputs['sex'],
                 birthday  : birthday_formated,
             }
-            ipcRenderer.on('addUserReply', (event, resp) => {
-                if (resp.error) {
-                    let errMsg;
-                    if (resp.errorMessage === 19) {
-                        this.formInputs.pseudo = '';
-                        errMsg = 'Le pseudo est déjà utilisé'
-                    } else {
-                        errMsg = "Il y a eu une erreur pour ajouter l'utilisateurs, merci de contacter un routier";
-                    }
-                    this.$buefy.dialog.alert({
-                        title: 'ERREUR',
-                        message: errMsg,
-                        type: 'is-danger',
-                        hasIcon: true,
-                        icon: 'times-circle',
-                        iconPack: 'fa',
-                        ariaRole: 'alertdialog',
-                        ariaModal: true
-                    })
-                } else {
+            this.$axios.post(this.$backend + '/users/add', {data: {
+                    user : resp
+                }})
+                .then(() => {
                     this.$buefy.dialog.alert({
                         title: 'Succes',
                         message: "L'utilisateur a bien été ajouté !",
@@ -214,14 +208,25 @@ export default {
                         ariaModal: true,
                         onConfirm : () => {this.$router.go()}
                     })
-                }
-            })
-            ipcRenderer.send('addUser', resp);
+                })
+                .catch(() => {
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: "Il y a eu une erreur pour ajouter l'utilisateurs, merci de contacter un routier",
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                })
         }
     },
     beforeMount() {
-        ipcRenderer.on('getPseudosReply', (event, resp) => {
-            if (resp.error) {
+        this.$axios.get(this.$backend + '/users/pseudos')
+            .then(resp => this.usedPseudos = resp.data)
+            .catch(() => {
                 this.$buefy.dialog.alert({
                     title: 'ERREUR',
                     message: 'Il y a eu une erreur récupérer les pseudos, merci de contacter un routier',
@@ -232,11 +237,7 @@ export default {
                     ariaRole: 'alertdialog',
                     ariaModal: true
                 })
-            } else {
-                this.usedPseudos = resp.data;
-            }
-        })
-        ipcRenderer.send('getPseudos')
+            })
     }
 }
 </script>

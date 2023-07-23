@@ -15,14 +15,12 @@
                     :image="beer.image"
                     />
             </div>
+            <h1 v-if="isEmpty()">No results !</h1>
         </div>
     </div>
 </template>
 
 <script>
-
-const {ipcRenderer} = window.require("electron")
-
 import BeerCard from '@/components/Shop/BeerCard.vue'
 
 export default {
@@ -39,6 +37,14 @@ export default {
   },
   methods : {
     search() {this.query = this.query.trim()},
+    isEmpty() {
+        for (const prop in this.filterBySearch()) {
+            if (Object.hasOwn(this.filterBySearch(), prop)) {
+                return false;
+            }
+        }
+        return true;
+    },
     filterBySearch() {
             if (this.query != '')
                 return this.beers.filter((beer) => {
@@ -59,8 +65,11 @@ export default {
   },
   beforeMount() {
     this.balance = JSON.parse(this.$route.params.infos).balance;
-    ipcRenderer.once("getAvailableBeersReply", (event, resp) => {
-        if (resp.error) {
+    this.$axios.get(this.$backend + '/beers/available')
+        .then(resp => {
+            this.beers = resp.data.filter(b => this.balance >= b.price);
+        })
+        .catch(() => {
             this.$buefy.dialog.alert({
                 title: 'ERREUR',
                 message: "Il y a eu une erreur pour recupérer les bières, merci de contacter un routier",
@@ -71,11 +80,7 @@ export default {
                 ariaRole: 'alertdialog',
                 ariaModal: true
             })
-        } else {
-            this.beers = resp.data.filter(b => this.balance >= b.price);
-        }
-    });
-    ipcRenderer.send("getAvailableBeers");
+        })
   }
 }
 </script>

@@ -44,9 +44,6 @@
 </template>
 
 <script>
-
-const {ipcRenderer} = window.require("electron")
-
 const ModalForm = {
     props: ['user'],
     template: `
@@ -149,7 +146,7 @@ export default {
         ]
     },
     close() {
-        ipcRenderer.send('close')
+        alert("The show must go on")
     }
   }
 }

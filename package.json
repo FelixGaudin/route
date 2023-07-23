@@ -5,21 +5,18 @@
   "private": true,
   "main": "main.js",
   "scripts": {
-    "start": "vue-cli-service build && electron .",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy": "sh deploy.sh",
-    "postinstall": "electron-builder install-app-deps",
-    "winBuild": "electron-packager . LaRoute --platform=win32 --arch=x64 --out=release-builds"
+    "deploy": "sh deploy.sh"
   },
   "dependencies": {
     "@vue/cli-service-global": "^4.5.15",
+    "axios": "^1.4.0",
     "base64-img": "^1.0.4",
     "buefy": "^0.9.10",
     "core-js": "^3.6.5",
-    "electron-builder": "^23.3.3",
-    "electron-rebuild": "^3.2.9",
+    "cors": "^2.8.5",
     "sqlite3": "^5.0.2",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0"
@@ -30,9 +27,6 @@
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
-    "electron": "^14.0.0",
-    "electron-packager": "^15.5.1",
-    "electron-store": "^6.0.1",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "vue-template-compiler": "^2.6.11"

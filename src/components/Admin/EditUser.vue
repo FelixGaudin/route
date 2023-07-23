@@ -134,8 +134,6 @@
 
 <script>
 
-const {ipcRenderer} = window.require("electron")
-
 export default {
     name: 'EditUser',
     data() {
@@ -226,8 +224,9 @@ export default {
                 type: 'is-danger',
                 hasIcon: true,
                 onConfirm: () => {
-                    ipcRenderer.on('removeUserReply', (event, resp) => {
-                        if (resp.error) {
+                    this.$axios.delete(this.$backend + '/users/delete/' + userId)
+                        .then(() => this.updateList())
+                        .catch(() => {
                             this.$buefy.dialog.alert({
                                 title: 'ERREUR',
                                 message: "Il y a eu une erreur pour supprimer l'utilisateur, merci de contacter un routier",
@@ -238,11 +237,7 @@ export default {
                                 ariaRole: 'alertdialog',
                                 ariaModal: true
                             })
-                        } else {
-                            this.updateList();
-                        }
-                    })
-                    ipcRenderer.send('removeUser', userId)
+                        })
                 }
             })
         },
@@ -255,7 +250,7 @@ export default {
                 })
         },
         applyChanges() {
-            let toModifyUser = this.displayedUsers
+            let toModifyUsers = this.displayedUsers
                 // Get modified users
                 .filter((user) => 
                     JSON.stringify(user)
@@ -269,26 +264,10 @@ export default {
                     user.birthday = Math.floor((birthday / 1000)-timezoneOffset)
                     return user;
                 })
-            ipcRenderer.once('updateUsersReply', (event, resp) => {
-                if (resp.error) {
-                    let errMsg;
-                    if (resp.errorMessage === 19) {
-                        this.formInputs.pseudo = '';
-                        errMsg = 'Un pseudo est déjà utilisé'
-                    } else {
-                        errMsg = "Il y a eu une erreur pour modifier l'utilisateurs, merci de contacter un routier";
-                    }
-                    this.$buefy.dialog.alert({
-                        title: 'ERREUR',
-                        message: errMsg,
-                        type: 'is-danger',
-                        hasIcon: true,
-                        icon: 'times-circle',
-                        iconPack: 'fa',
-                        ariaRole: 'alertdialog',
-                        ariaModal: true
-                    })
-                } else {
+            this.$axios.put(this.$backend + '/users/update', {data: {
+                    toModifyUsers : toModifyUsers
+                }})
+                .then(() => {
                     this.$buefy.dialog.alert({
                         title: 'Succes',
                         message: "Le(s) utilisateur(s) ont bien été modifiés",
@@ -297,13 +276,33 @@ export default {
                         ariaModal: true,
                         onConfirm : () => {this.updateList()}
                     })
-                }
-            })
-            ipcRenderer.send('updateUsers', toModifyUser)
+                })
+                .catch(() => {
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: "Il y a eu une erreur pour modifier l'utilisateurs, merci de contacter un routier",
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                })
         },
         updateList() {
-            ipcRenderer.once('getUsersReply', (event, resp) => {
-                if (resp.error) {
+            this.$axios.get(this.$backend + '/users/list')
+                .then(resp => {
+                    this.users = resp.data
+                            .sort((a, b) => a.pseudo.localeCompare(b.pseudo))
+                            .map((user) => {
+                                user.birthday = new Date(user.birthday*1000);
+                                this.usersHashes[user.id] = JSON.stringify(user);
+                                return user;
+                            });
+                    this.clear();
+                })
+                .catch(() => {
                     this.$buefy.dialog.alert({
                         title: 'ERREUR',
                         message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
@@ -314,18 +313,7 @@ export default {
                         ariaRole: 'alertdialog',
                         ariaModal: true
                     })
-                } else {
-                    this.users = resp.data
-                            .sort((a, b) => a.pseudo.localeCompare(b.pseudo))
-                            .map((user) => {
-                                user.birthday = new Date(user.birthday*1000);
-                                this.usersHashes[user.id] = JSON.stringify(user);
-                                return user;
-                            });
-                    this.clear();
-                }
-            })
-            ipcRenderer.send('getUsers')
+                })
         }
     },
     beforeMount() {

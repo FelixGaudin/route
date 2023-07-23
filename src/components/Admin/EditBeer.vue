@@ -158,8 +158,10 @@
 
 <script>
 
-const {ipcRenderer} = window.require("electron")
-const base64Img = window.require("base64-img")
+// const {ipcRenderer} = window.require("electron")
+// const base64Img = window.require("base64-img")
+const ipcRenderer = null
+const base64Img = null
 
 export default {
     name: 'BeerCard',

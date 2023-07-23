@@ -75,8 +75,6 @@
 </template>
 <script>
 
-const {ipcRenderer} = window.require("electron")
-
 export default {
     data() {
         // const displayedUsers = []
@@ -106,7 +104,6 @@ export default {
     },
     methods: {
         formatUserInfo(user) {
-            console.log(user);
             return JSON.stringify({
                 userId : user.id,
                 balance : user.balance
@@ -227,35 +224,47 @@ export default {
             }
         },
         loadAlcoholLevel : async function() {
-            ipcRenderer.on('getAlcoholLevelReply', (event, resp) => {
-                if (!resp.error) {
+            this.$axios.get(this.$backend + "/utils/alcohol-level", {params : {
+                    timestamp : new Date() / 1000,
+                    tresh : this.$tresh
+                }})
+                .then(resp => {
                     this.users.forEach((u) => {
                         let tmp = resp.data.find(r => r.userId === u.id);
                         u.alcoholLevel = 0 
                         if (tmp) u.alcoholLevel = tmp.alcoholLevel
                         })
                     this.reloadClassement()
-                }
-            })
-            ipcRenderer.send('getAlcoholLevel')
+                })
         },
         loadExpenses: async function() {
-            ipcRenderer.on('getExpensesReply', (event, resp) => {
-                if (!resp.error) {
-                    this.users.forEach((u) => {
-                        let tmp = resp.data.find(r => r.userId === u.id);
-                        u.expenses = 0 
-                        if (tmp) u.expenses = tmp.expenses
-                        })
-                    this.reloadClassement()
-                }
+            this.$axios.get(this.$backend + '/utils/expenses', {params : {
+                timestamp : new Date() / 1000,
+                tresh : this.$tresh
+            }})
+            .then(resp => {
+                this.users.forEach((u) => {
+                    let tmp = resp.data.find(r => r.userId === u.id);
+                    u.expenses = 0 
+                    if (tmp) u.expenses = tmp.expenses
+                    })
+                this.reloadClassement()
             })
-            ipcRenderer.send('getExpenses')
         }
     },
     beforeMount() {
-        ipcRenderer.on('getUsersReply', (event, resp) => {
-            if (resp.error) {
+        this.$axios.get(this.$backend + "/users/list")
+            .then(resp => {
+                this.users = resp.data.sort((a, b) => b.croix - a.croix);
+                this.users.forEach((u, i) => {
+                    u.displayedId = i+1;
+                    u.balance = u.rond - u.croix
+                    })
+                this.displayedUsers = this.users;
+                this.loadAlcoholLevel()
+                this.loadExpenses()
+            })
+            .catch(() => {
                 this.$buefy.dialog.alert({
                     title: 'ERREUR',
                     message: 'Il y a eu une erreur pour récupérer les utilisateurs, merci de contacter un routier',
@@ -266,18 +275,7 @@ export default {
                     ariaRole: 'alertdialog',
                     ariaModal: true
                 })
-            } else {
-                this.users = resp.data.sort((a, b) => b.croix - a.croix);
-                this.users.forEach((u, i) => {
-                    u.displayedId = i+1;
-                    u.balance = u.rond - u.croix
-                    })
-                this.displayedUsers = this.users;
-                this.loadAlcoholLevel()
-                this.loadExpenses()
-            }
-        })
-        ipcRenderer.send('getUsers')
+            })
     }
 }
 </script>

@@ -100,6 +100,30 @@ function updateUser(user, callback) {
         })
 }
 
+function updateUser_async(user) {
+    return new Promise(resolve => {
+        updateUser(user, (err) => {
+            resolve(err);
+        })
+    })
+}
+
+async function updateUsers_loop(users) {
+    let err;
+    for (let i = 0; i < users.length; i++) {
+        err = await updateUser_async(users[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+function updateUsers(toModifyUsers, callback) {
+    updateUsers_loop(toModifyUsers).then((err) => {
+        if (callback) callback(err);
+    });
+}
+
 function removeUser(userId, callback) {
     db.run('UPDATE Users SET active = 0 WHERE id = ?',
         [userId],
@@ -258,10 +282,10 @@ function getUserExpenses(timestamp, tresh, callback) {
 
 module.exports.users = {
     getUsers   : getUsers,
-    getPseudos : getPseudos,
+    getPseudos : getPseudos, // TODO: remove
     addUser    : addUser,
     getUser    : getUser,
-    updateUser : updateUser,
+    updateUsers : updateUsers,
     addRond    : addRond,
     addCroix   : addCroix,
     resetCroix : resetCroix,

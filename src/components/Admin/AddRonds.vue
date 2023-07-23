@@ -33,8 +33,6 @@
 
 <script>
 
-const {ipcRenderer} = window.require("electron")
-
 export default {
     name : "AddRonds",
     data() {
@@ -79,8 +77,17 @@ export default {
                     confirmText: 'Oui',
                     type: 'is-success',
                     onConfirm: () => {
-                        ipcRenderer.once('addRondReply', (event, resp) => {
-                            if (resp.error) {
+                        this.$axios.put(this.$backend + '/users/add-rond', {data : {
+                                pseudo : this.selected,
+                                number : number
+                            }})
+                            .then(() => {
+                                this.$buefy.toast.open(`Les ${number} croix on bien été ajouté à ${this.selected}`)
+                                this.selected = undefined
+                                this.number = 7
+                                this.query = ''
+                            })
+                            .catch(() => {
                                 this.$buefy.dialog.alert({
                                     title: 'ERREUR',
                                     message: 'Il y a eu une erreur pour ajouter les ronds, merci de contacter un routier',
@@ -91,22 +98,16 @@ export default {
                                     ariaRole: 'alertdialog',
                                     ariaModal: true
                                 })
-                            } else {
-                                this.$buefy.toast.open(`Les ${number} croix on bien été ajouté à ${this.selected}`)
-                                this.selected = undefined
-                                this.number = 7
-                                this.query = ''
-                            }
-                        });
-                        ipcRenderer.send('addRond', this.selected, number);
+                            })
                     }
                 })
             }
         }
     },
     beforeMount() {
-        ipcRenderer.on('getPseudosReply', (event, resp) => {
-            if (resp.error) {
+        this.$axios.get(this.$backend + '/users/pseudos')
+            .then(resp => this.users = resp.data)
+            .catch(() => {
                 this.$buefy.dialog.alert({
                     title: 'ERREUR',
                     message: 'Il y a eu une erreur récupérer les pseudos, merci de contacter un routier',
@@ -117,11 +118,7 @@ export default {
                     ariaRole: 'alertdialog',
                     ariaModal: true
                 })
-            } else {
-                this.users = resp.data;
-            }
-        })
-        ipcRenderer.send('getPseudos')
+            })
     }
 }
 </script>

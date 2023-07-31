@@ -5,6 +5,8 @@ const port = 6969
 const cors = require('cors');
 app.use(cors({origin : "*"}));
 
+app.use(express.json({ limit: '50mb' }));
+
 const bodyParser = require('body-parser')
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -155,7 +157,7 @@ app.get('/beers/available', (req, res) => {
 })
 
 app.post('/beers/add', (req, res) => {
-    db.beers.addBeer(req.body.data.beer, (err) => {
+    db.beers.addBeers(req.body.data.beers, (err) => {
         if (err) {
             console.log(err);
             res.status(500);
@@ -167,7 +169,7 @@ app.post('/beers/add', (req, res) => {
 })
 
 app.put('/beers/update', (req, res) => {
-    db.beers.updateBeer(req.body.data.beer, (err) => {
+    db.beers.updateBeers(req.body.data.beers, (err) => {
         if (err) {
             console.log(err);
             res.status(500);
@@ -178,8 +180,8 @@ app.put('/beers/update', (req, res) => {
     })
 })
 
-app.delete('/beers/delete', (req, res) => {
-    db.beers.removeBeer(req.body.data.beerId, (err) => {
+app.delete('/beers/delete/:beerId', (req, res) => {
+    db.beers.removeBeer(req.params.beerId, (err) => {
         if (err) {
             console.log(err);
             res.status(500);

@@ -160,7 +160,7 @@
 
 // const {ipcRenderer} = window.require("electron")
 // const base64Img = window.require("base64-img")
-const ipcRenderer = null
+// const ipcRenderer = null
 const base64Img = null
 
 export default {
@@ -224,23 +224,22 @@ export default {
                 type: 'is-danger',
                 hasIcon: true,
                 onConfirm: () => {
-                    ipcRenderer.on('removeBeerReply', (event, resp) => {
-                        if (resp.error) {
-                            this.$buefy.dialog.alert({
-                                title: 'ERREUR',
-                                message: "Il y a eu une erreur pour supprimer la bière, merci de contacter un routier",
-                                type: 'is-danger',
-                                hasIcon: true,
-                                icon: 'times-circle',
-                                iconPack: 'fa',
-                                ariaRole: 'alertdialog',
-                                ariaModal: true
-                            })
-                        } else {
+                    this.$axios.delete(this.$backend + '/beers/delete/' + beerId)
+                        .then(() => {
                             this.updateList();
-                        }
-                    })
-                    ipcRenderer.send('removeBeer', beerId)
+                        })
+                        .catch(() => {
+                                this.$buefy.dialog.alert({
+                                    title: 'ERREUR',
+                                    message: "Il y a eu une erreur pour supprimer la bière, merci de contacter un routier",
+                                    type: 'is-danger',
+                                    hasIcon: true,
+                                    icon: 'times-circle',
+                                    iconPack: 'fa',
+                                    ariaRole: 'alertdialog',
+                                    ariaModal: true
+                                })
+                            })
                 }
             })
         },
@@ -273,21 +272,24 @@ export default {
                     .localeCompare(this.beerHashes[beer.id]) !== 0)))
             console.log("Modified beers");
             console.log(modifiedBeers);
-            ipcRenderer.once('addBeersReply', (event, resp) => {
-                if (resp.error) {
-                    this.$buefy.dialog.alert({
-                        title: 'ERREUR',
-                        message: 'Il y a eu une erreur pour ajouter les bières, merci de contacter un routier',
-                        type: 'is-danger',
-                        hasIcon: true,
-                        icon: 'times-circle',
-                        iconPack: 'fa',
-                        ariaRole: 'alertdialog',
-                        ariaModal: true
-                    })
-                } else {
-                    ipcRenderer.once("updateBeersReply", (event, resp) => {
-                        if (resp.error) {
+            this.$axios.post(this.$backend + '/beers/add', {data : {
+                    beers : newBeers
+                }})
+                .then(() => {
+                    this.$axios.put(this.$backend + '/beers/update', {data: {
+                            beers: modifiedBeers
+                        }})
+                        .then(() => {
+                            this.$buefy.dialog.alert({
+                                title: 'Succes',
+                                message: "Le(s) bière(s) ont bien été modifiés",
+                                type: 'is-success',
+                                ariaRole: 'alertdialog',
+                                ariaModal: true,
+                                onConfirm : () => {this.updateList()}
+                            })
+                        })
+                        .catch(() => {
                             this.$buefy.dialog.alert({
                                 title: 'ERREUR',
                                 message: 'Il y a eu une erreur pour modifier les bières, merci de contacter un routier',
@@ -298,22 +300,20 @@ export default {
                                 ariaRole: 'alertdialog',
                                 ariaModal: true
                             })
-                        } else {
-                            this.$buefy.dialog.alert({
-                                title: 'Succes',
-                                message: "Le(s) bière(s) ont bien été modifiés",
-                                type: 'is-success',
-                                ariaRole: 'alertdialog',
-                                ariaModal: true,
-                                onConfirm : () => {this.updateList()}
-                            })
-                        }
-                    });
-                    ipcRenderer.send("updateBeers", modifiedBeers);
-                }
-            });
-            ipcRenderer.send('addBeers', newBeers);
-
+                        })
+                })
+                .catch(() => {
+                    this.$buefy.dialog.alert({
+                        title: 'ERREUR',
+                        message: 'Il y a eu une erreur pour ajouter les bières, merci de contacter un routier',
+                        type: 'is-danger',
+                        hasIcon: true,
+                        icon: 'times-circle',
+                        iconPack: 'fa',
+                        ariaRole: 'alertdialog',
+                        ariaModal: true
+                    })
+                })
         },
         clear() {
             this.displayedBeers = this.beers
@@ -337,8 +337,17 @@ export default {
             this.selectedImage = null;
         },
         updateList() {
-            ipcRenderer.once('getBeersReply', (event, resp) => {
-                if (resp.error) {
+            this.$axios.get(this.$backend + '/beers/list')
+                .then(resp => {
+                    this.beers = resp.data.sort((a, b) => a.name.localeCompare(b.name));
+                    this.beers.forEach((beer) => {
+                        beer.isAvailable = Boolean(beer.isAvailable);
+                        this.beerHashes[beer.id] = JSON.stringify(beer);
+                        })
+                    
+                    this.clear();
+                })
+                .catch(() => {
                     this.$buefy.dialog.alert({
                         title: 'ERREUR',
                         message: 'Il y a eu une erreur pour récupérer les bières, merci de contacter un routier',
@@ -349,17 +358,7 @@ export default {
                         ariaRole: 'alertdialog',
                         ariaModal: true
                     })
-                } else {
-                    this.beers = resp.data.sort((a, b) => a.name.localeCompare(b.name));
-                    this.beers.forEach((beer) => {
-                        beer.isAvailable = Boolean(beer.isAvailable);
-                        this.beerHashes[beer.id] = JSON.stringify(beer);
-                        })
-                    
-                    this.clear();
-                }
-            })
-            ipcRenderer.send('getBeers')
+                })
         }
     },
     beforeMount() {

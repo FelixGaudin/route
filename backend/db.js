@@ -189,6 +189,30 @@ function addBeer(beer, callback) {
         })
 }
 
+function addBeerAsync(beer) {
+    return new Promise(resolve => {
+        addBeer(beer, (err) => {
+            resolve(err);
+        })
+    })
+}
+
+async function addBeersLoop(beers) {
+    let err;
+    for (let i = 0; i < beers.length; i++) {
+        err = await addBeerAsync(beers[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+function addBeers(beers, callback) {
+    addBeersLoop(beers).then((err) => {
+        if (callback) callback(err);
+    });
+}
+
 function updateBeer(beer, callback) {
     db.run(`UPDATE Beers 
         SET name = ?, price = ?, degre = ?, 
@@ -199,6 +223,30 @@ function updateBeer(beer, callback) {
             if (err) console.log(err)
             if (callback) callback(err)
         })
+}
+
+function updateBeerAsync(beer) {
+    return new Promise(resolve => {
+        updateBeer(beer, (err) => {
+            resolve(err);
+        })
+    })
+}
+
+async function updateBeersLoop(beers) {
+    let err;
+    for (let i = 0; i < beers.length; i++) {
+        err = await updateBeerAsync(beers[i]);
+        if (err) {
+            return err;
+        }
+    }
+}
+
+function updateBeers(beers, callback) {
+    updateBeersLoop(beers).then((err) => {
+        if (callback) callback(err);
+    });
 }
 
 function removeBeer(beerId, callback) {
@@ -296,7 +344,9 @@ module.exports.beers = {
     getBeers: getBeers,
     getAvailableBeers : getAvailableBeers,
     addBeer: addBeer,
+    addBeers: addBeers,
     updateBeer: updateBeer,
+    updateBeers: updateBeers,
     removeBeer: removeBeer
 }
 

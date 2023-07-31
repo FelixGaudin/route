@@ -46,28 +46,29 @@ export default {
         return true;
     },
     filterBySearch() {
-            if (this.query != '')
-                return this.beers.filter((beer) => {
-                    return beer.name
-                            .toString()
-                            .normalize("NFD")
-                            .replace(/[\u0300-\u036f]/g, "")
-                            .toLowerCase()
-                            .indexOf(
-                                this.query
-                                    .toLowerCase()
-                                    .normalize("NFD")
-                                    .replace(/[\u0300-\u036f]/g, "")
-                                ) >= 0
-                    })
-            else return this.beers
-        },
+        if (this.query != '')
+            return this.beers.filter((beer) => {
+                return beer.name
+                        .toString()
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .toLowerCase()
+                        .indexOf(
+                            this.query
+                                .toLowerCase()
+                                .normalize("NFD")
+                                .replace(/[\u0300-\u036f]/g, "")
+                            ) >= 0
+                })
+        else return this.beers
+    },
   },
   beforeMount() {
     this.balance = JSON.parse(this.$route.params.infos).balance;
     this.$axios.get(this.$backend + '/beers/available')
         .then(resp => {
             this.beers = resp.data.filter(b => this.balance >= b.price);
+            this.beers.forEach(beer => console.log(beer.name))
         })
         .catch(() => {
             this.$buefy.dialog.alert({

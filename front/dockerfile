@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Copier les fichiers nécessaires pour installer les dépendances
 COPY package.json .
-COPY package-lock.json .
 
 # Installer les dépendances
 RUN npm install

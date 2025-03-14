@@ -8,9 +8,14 @@ services:
     network_mode: "host"
     volumes:
       - ./route.sqlite:/app/route.sqlite
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
   route-front:
     build:
       context: ./front
     container_name: front
     network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro

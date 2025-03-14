@@ -1,4 +1,5 @@
 const express = require('express')
+const { exec } = require('child_process');
 const app = express()
 const port = 6969
 
@@ -226,7 +227,16 @@ app.get('/utils/expenses', (req, res) => {
     })
 })
 
-
+app.post("/time", (req, res) => {
+    const { datetime } = req.body;
+    exec(`date --set="${datetime}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.log(error)
+            return res.status(500).send(`Error executing command: ${stderr}`);
+        }
+        res.send(`Date and time successfully updated to: ${stdout}`);
+    })
+})
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)

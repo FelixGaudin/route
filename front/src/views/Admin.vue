@@ -17,6 +17,9 @@
               <b-tab-item label="Modifier les alcooliques">
                   <EditUser/>
               </b-tab-item>
+              <b-tab-item label="Modifier la date">
+                  <Date/>
+              </b-tab-item>
             </b-tabs>
     </div>
 </template>
@@ -28,6 +31,7 @@ import AddRonds from '@/components/Admin/AddRonds.vue'
 import EditBeer from '@/components/Admin/EditBeer.vue'
 import EditUser from '@/components/Admin/EditUser.vue'
 import Stats    from '@/components/Admin/Stats.vue'
+import Date     from '@/components/Admin/Date.vue'
 
 export default {
   name: 'Route',
@@ -36,11 +40,12 @@ export default {
     AddRonds,
     EditBeer,
     EditUser,
-    Stats
+    Stats,
+    Date
   },
   data() {
     return {
-        activeTab : 2,
+        activeTab : 5,
     };
   }
 };
